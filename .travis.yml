@@ -1,1 +1,12 @@
 language: java
+addons:
+  sonarcloud:
+    organization: "adesso-schweiz-ag"
+    token:
+      secure: "DBVgty2nd4kq6fvtk5Ln8T3UuXmhqZFv/Ro45ydj1qVg2U2uuHNDkI2x8jkuA/ttROo3Hgac4EDHzKy+7If2dRkb5TSXLYIk6iUnjMRWRLbQEfc3ySbNYWLOKoppt7KJb4v9sui8EIjwGldNbrxaelVjXuGB5VGDc7R0phWKB+ZDFI6XLMQ9nGSYJ1XJMZIEpURbe4tY3m/7tD8W6RscbJcCrc5n9fqeThDr7g/3wjiY90pEGmATcdtoFy5heUTzQFMefo3Vb6lHJ4mgQKN6Vn2JLCUIar0c7I/F5IUfirZ20SSOdx77s8aLQ1w/S7dWXYHmUGxgv0rkOq4/F1Haq5FoxAjnApvqtlA9GS9ctE2Pxq/gW8N+SZ7YvloSh190qPnt1PHV1OrFQHqphPWAQoWfpdIgpXoTKvBDZYpI/t346h0Wczw513jIOD2KImFZjG12KoXEeliJsWgzOxGNy4x+Sxxxt/PTJXnMMZGiqGmQ9OVxgs74uE1oshkYe+C+QtgzjPTlFypaxUYPDvltys96wEk6ueP7kJUB0M6jfn5G17omqqc8hNNQtET7R2+pcZBurAo2TS6iEffp5JMA9847puaLPCAgQUI7/v1YfkquKIn/wuwsY7P7NjIECnwphDa1P4TvU5gSzkzkUygSmi+qsf93CY6UBnvUn6oJuvA="
+cache:
+  directories:
+    - $HOME/.m2/repository
+install: true
+script:
+  - mvn clean verify sonar:sonar
