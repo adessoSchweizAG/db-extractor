@@ -74,7 +74,7 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 		}
 		else {
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			return "DATE '" + sdf.format(value) + "'";
+			return "TIMESTAMP ('" + sdf.format(value) + "')";
 		}
 	}
 

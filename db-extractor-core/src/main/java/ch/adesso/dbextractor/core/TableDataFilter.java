@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,7 +35,7 @@ public class TableDataFilter  {
 
     public TableDataFilter addWhereSql(String sql) {
     	
-    	Set<Object> set = mapFilters.computeIfAbsent(null, key -> new HashSet<>());
+    	Set<Object> set = mapFilters.computeIfAbsent(null, key -> new LinkedHashSet<>());
         filterModified = set.add(sql) || filterModified;
         return this;
     }
@@ -67,30 +68,10 @@ public class TableDataFilter  {
                 }
             }
             else {
-                sb.append(entry.getKey()).append(" IN (");
-                
                 List<Object> sortedValues = new ArrayList<>(entry.getValue());
-                Collections.sort(sortedValues, (o1, o2) -> {
-
-                    if (o1 == null && o2 == null) {
-                        return 0;
-                    }
-                    else if (o1 == null) {
-                        return -1;
-                    }
-                    else if (o2 == null) {
-                        return 1;
-                    }
-
-                    if (o1 instanceof Long && o2 instanceof Long) {
-                        return Long.compare((Long)o1, (Long)o2);
-                    }
-                    else if (o1 instanceof Comparable && o1.getClass().equals(o2.getClass())) {
-                        return ((Comparable)o1).compareTo(o2);
-                    }
-                    return o1.getClass().getName().compareTo(o2.getClass().getName());
-                });
-                
+                Collections.sort(sortedValues, this::naturalSortCompair);
+            	
+            	sb.append(entry.getKey()).append(" IN (");
                 boolean isFirstValue = true;
                 for (Object value : sortedValues) {
                     if (!isFirstValue) {
@@ -98,19 +79,7 @@ public class TableDataFilter  {
                     }
                     isFirstValue = false;
                     
-                    if (value == null) {
-                        sb.append("NULL");
-                        return "NULL";
-                    }
-                    else if (value instanceof Boolean) {
-                        sb.append((boolean) value ? "1" : "0");
-                    }
-                    else if (value instanceof String) {
-                        sb.append("'" + ((String) value).replace("'", "''") + "'");
-                    }
-                    else {
-                        sb.append(value);
-                    }
+                    sb.append(toSqlValueString(value));
                 }
                 sb.append(")");
             }
@@ -122,6 +91,37 @@ public class TableDataFilter  {
         }
         return sb.toString();
     }
+    
+    private int naturalSortCompair(Object o1, Object o2) {
+    	
+	    if (o1 == null && o2 == null) {
+	        return 0;
+	    }
+	    else if (o1 == null) {
+	        return -1;
+	    }
+	    else if (o2 == null) {
+	        return 1;
+	    }
+
+	    else if (o1 instanceof Comparable && o1.getClass().equals(o2.getClass())) {
+	        return ((Comparable)o1).compareTo(o2);
+	    }
+	    return o1.getClass().getName().compareTo(o2.getClass().getName());
+    }
+    
+	private String toSqlValueString(Object value) {
+		if (value == null) {
+			return "NULL";
+		}
+		else if (value instanceof Boolean) {
+			return (boolean) value ? "1" : "0";
+		}
+		else if (value instanceof String) {
+			return "'" + ((String) value).replace("'", "''") + "'";
+		}
+		return value.toString();
+	}
 
     public boolean isFilterModified() {
         return filterModified;
