@@ -46,6 +46,16 @@ public abstract class AbstractScriptData implements ScriptData {
 		}
 		outStream.println();
 
+		List<TableDataFilter> tables = collectData();
+		for (TableDataFilter table : tables) {
+
+			outStream.println();
+			outStream.println("-- " + table.toSelectSql() + ";");
+			printInsertSql(table, outStream);
+		}
+	}
+
+	private List<TableDataFilter> collectData() {
 		while (!isFilterDone()) {
 			for (TableDataFilter table : new ArrayList<>(mapTables.values())) {
 				if (table.isFilterModified()) {
@@ -82,14 +92,7 @@ public abstract class AbstractScriptData implements ScriptData {
 			}
 		}
 
-		tables = postProcess(tables);
-
-		for (TableDataFilter table : tables) {
-
-			outStream.println();
-			outStream.println("-- " + table.toSelectSql() + ";");
-			printInsertSql(table, outStream);
-		}
+		return postProcess(tables);
 	}
 
 	abstract void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
