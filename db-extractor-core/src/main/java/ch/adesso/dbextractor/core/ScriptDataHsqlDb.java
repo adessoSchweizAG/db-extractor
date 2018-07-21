@@ -79,32 +79,6 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 	}
 
 	@Override
-	void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
-			throws SQLException {
-
-		for (int i = 0; i < foreignKeys.size(); i++) {
-			ForeignKey fk = foreignKeys.get(i);
-			Object columnValue = rs.getObject(fk.getFkColumnName());
-
-			if (columnValue != null) {
-
-				ForeignKey nextFkColumn = foreignKeys.size() > i + 1 ? foreignKeys.get(i + 1) : null;
-				if (nextFkColumn != null && nextFkColumn.getName().equals(fk.getName())) {
-					Object nextColumnValue = rs.getObject(nextFkColumn.getFkColumnName());
-					getTableDataFilter(fk.getPkTableName()).addWhereSql("(" + fk.getPkColumnName() + " = " + columnValue
-							+ " AND " + nextFkColumn.getPkColumnName() + " = " + nextColumnValue + ")");
-					i++;
-				}
-				else {
-					getTableDataFilter(fk.getPkTableName()).addWhereInValue(fk.getPkColumnName(), columnValue);
-				}
-
-				table.getDependsOn().add(fk.getPkTableName());
-			}
-		}
-	}
-
-	@Override
 	void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException {
 
 	}
@@ -115,13 +89,22 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 				Statement stmt = con.createStatement();
 				ResultSet rs = stmt.executeQuery(SQL_SELECT_FOREIGN_KEY);) {
 
-			List<ForeignKey> result = new ArrayList<>();
+			Map<DatabaseObject, ForeignKey> mapForeignKey = new HashMap<>();
 			while (rs.next()) {
-				result.add(new ForeignKey(rs.getString("CONSTRAINT_SCHEMA"), rs.getString("CONSTRAINT_NAME"),
-						rs.getString("FK_TABLE_NAME"), rs.getString("FK_COLUMN_NAME"),
-						rs.getString("PK_TABLE_NAME"), rs.getString("PK_COLUMN_NAME")));
+				DatabaseObject constraint = new DatabaseObject(
+						rs.getString("CONSTRAINT_CATALOG"), rs.getString("CONSTRAINT_SCHEMA"), rs.getString("CONSTRAINT_NAME"));
+				DatabaseObject fkTable = new DatabaseObject(
+						rs.getString("FK_TABLE_CATALOG"), rs.getString("FK_TABLE_SCHEMA"), rs.getString("FK_TABLE_NAME"));
+				DatabaseObject pkTable = new DatabaseObject(
+						rs.getString("PK_TABLE_CATALOG"), rs.getString("PK_TABLE_SCHEMA"), rs.getString("PK_TABLE_NAME"));
+				
+				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint, k ->
+					new ForeignKey(k.getSchema(), k.getName(), fkTable.getName(), pkTable.getName()));
+				
+				foreignKey.getFkColumnNames().add(rs.getString("FK_COLUMN_NAME"));
+				foreignKey.getPkColumnNames().add(rs.getString("PK_COLUMN_NAME"));
 			}
-			return result;
+			return new ArrayList<>(mapForeignKey.values());
 		} catch (ClassNotFoundException | SQLException e) {
 			throw new IllegalStateException(e);
 		}

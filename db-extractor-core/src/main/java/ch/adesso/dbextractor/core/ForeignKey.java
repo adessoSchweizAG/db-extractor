@@ -1,23 +1,22 @@
 package ch.adesso.dbextractor.core;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class ForeignKey {
 
     private final String owner;
     private final String name;
     private final String fkTableName;
-    private final String fkColumnName;
+    private final List<String> fkColumnNames = new LinkedList<>();
     private final String pkTableName;
-    private final String pkColumnName;
+    private final List<String> pkColumnNames = new LinkedList<>();
 
-
-    public ForeignKey(String owner, String name,
-            String fkTableName, String fkColumnName, String pkTableName, String pkColumnName) {
+    public ForeignKey(String owner, String name, String fkTableName, String pkTableName) {
         this.owner = owner;
         this.name = name;
         this.fkTableName = fkTableName;
-        this.fkColumnName = fkColumnName;
         this.pkTableName = pkTableName;
-        this.pkColumnName = pkColumnName;
     }
 
     public String getOwner() {
@@ -32,16 +31,15 @@ public class ForeignKey {
         return fkTableName;
     }
 
-    public String getFkColumnName() {
-        return fkColumnName;
+    public List<String> getFkColumnNames() {
+        return fkColumnNames;
     }
 
     public String getPkTableName() {
         return pkTableName;
     }
 
-    public String getPkColumnName() {
-        return pkColumnName;
+    public List<String> getPkColumnNames() {
+        return pkColumnNames;
     }
-
 }

@@ -95,8 +95,34 @@ public abstract class AbstractScriptData implements ScriptData {
 		return postProcess(tables);
 	}
 
-	abstract void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
-			throws SQLException;
+	void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
+			throws SQLException {
+		
+		for (ForeignKey fk : foreignKeys) {
+			
+			if (fk.getFkColumnNames().size() == 1) {
+				Object columnValue = rs.getObject(fk.getFkColumnNames().get(0));
+				if (columnValue != null) {
+					getTableDataFilter(fk.getPkTableName()).addWhereInValue(fk.getPkColumnNames().get(0), columnValue);
+				}
+			}
+			else {
+				StringBuilder sb = new StringBuilder("(");
+				for (int i = 0; i < fk.getFkColumnNames().size(); i++) {
+					Object columnValue = rs.getObject(fk.getFkColumnNames().get(i));
+					if (columnValue == null) {
+						sb.append(fk.getPkColumnNames().get(i)).append(" IS NULL");
+					}
+					else {
+						sb.append(fk.getPkColumnNames().get(i)).append(" = ").append(toSqlValueString(columnValue));
+					}
+					sb.append(" AND ");
+				}
+				sb.replace(sb.length() - 5, sb.length(), ")");
+				getTableDataFilter(fk.getPkTableName()).addWhereSql(sb.toString());
+			}
+		}
+	}
 
 	abstract void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException;
 
