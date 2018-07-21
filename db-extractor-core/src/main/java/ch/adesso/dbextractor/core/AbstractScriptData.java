@@ -23,9 +23,9 @@ public abstract class AbstractScriptData implements ScriptData {
 	private final String jdbcUser;
 	private final String jdbcPassword;
 
-	private Map<String, String> primaryKey;
+	private Map<DatabaseObject, String> primaryKey;
 	private List<ForeignKey> foreignKey;
-	private Map<String, TableDataFilter> mapTables = new HashMap<>();
+	private Map<DatabaseObject, TableDataFilter> mapTables = new HashMap<>();
 
 	public AbstractScriptData(String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPassword) {
 		this.jdbcDriver = jdbcDriver;
@@ -39,7 +39,7 @@ public abstract class AbstractScriptData implements ScriptData {
 
 		outStream.println("-- Input:");
 		for (TableDataFilter table : list) {
-			mapTables.put(table.getTableName(), table);
+			mapTables.put(table.getTable(), table);
 			if (table.hasFilter()) {
 				outStream.println("-- " + table.toSelectSql());
 			}
@@ -61,7 +61,7 @@ public abstract class AbstractScriptData implements ScriptData {
 				if (table.isFilterModified()) {
 					table.setFilterModified(false);
 
-					List<ForeignKey> foreignKeys = getForeignKey(table.getTableName());
+					List<ForeignKey> foreignKeys = getForeignKey(table.getTable());
 					try (Connection con = getConnection();
 							Statement stmt = con.createStatement();
 							ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
@@ -88,7 +88,7 @@ public abstract class AbstractScriptData implements ScriptData {
 				continue;
 			}
 			if (table.getOrderBy() == null) {
-				table.setOrderBy(getPrimaryKeyColumns(table.getTableName()));
+				table.setOrderBy(getPrimaryKeyColumns(table.getTable()));
 			}
 		}
 
@@ -103,7 +103,7 @@ public abstract class AbstractScriptData implements ScriptData {
 			if (fk.getFkColumnNames().size() == 1) {
 				Object columnValue = rs.getObject(fk.getFkColumnNames().get(0));
 				if (columnValue != null) {
-					getTableDataFilter(fk.getPkTableName()).addWhereInValue(fk.getPkColumnNames().get(0), columnValue);
+					getTableDataFilter(fk.getPkTable()).addWhereInValue(fk.getPkColumnNames().get(0), columnValue);
 				}
 			}
 			else {
@@ -119,7 +119,7 @@ public abstract class AbstractScriptData implements ScriptData {
 					sb.append(" AND ");
 				}
 				sb.replace(sb.length() - 5, sb.length(), ")");
-				getTableDataFilter(fk.getPkTableName()).addWhereSql(sb.toString());
+				getTableDataFilter(fk.getPkTable()).addWhereSql(sb.toString());
 			}
 		}
 	}
@@ -137,7 +137,7 @@ public abstract class AbstractScriptData implements ScriptData {
 
 			while (rs.next()) {
 				StringBuilder sbSqlInsert = new StringBuilder();
-				sbSqlInsert.append("INSERT INTO ").append(table.getTableName()).append(" (");
+				sbSqlInsert.append("INSERT INTO ").append(table.getTable().toString()).append(" (");
 
 				for (int i = 1; i <= metaData.getColumnCount(); i++) {
 					if (i > 1) {
@@ -174,19 +174,19 @@ public abstract class AbstractScriptData implements ScriptData {
 				int depth2 = getDepth(o2);
 
 				if (depth1 == depth2) {
-					return o1.getTableName().compareTo(o2.getTableName());
+					return o1.getTable().getName().compareTo(o2.getTable().getName());
 				}
 				return Integer.compare(depth1, depth2);
 			}
 
 			private int getDepth(TableDataFilter table) {
 				int result = 0;
-				for (String dependTableName : table.getDependsOn()) {
-					if (dependTableName.equals(table.getTableName())) {
+				for (DatabaseObject dependTable : table.getDependsOn()) {
+					if (dependTable.equals(table.getTable())) {
 						continue;
 					}
 
-					int depth = getDepth(mapTables.get(dependTableName)) + 1;
+					int depth = getDepth(mapTables.get(dependTable)) + 1;
 					if (result < depth) {
 						result = depth;
 					}
@@ -207,8 +207,8 @@ public abstract class AbstractScriptData implements ScriptData {
 		return true;
 	}
 
-	protected TableDataFilter getTableDataFilter(String tableName) {
-		return mapTables.computeIfAbsent(tableName, TableDataFilter::new);
+	protected TableDataFilter getTableDataFilter(DatabaseObject table) {
+		return mapTables.computeIfAbsent(table, TableDataFilter::new);
 	}
 
 	Connection getConnection() throws SQLException, ClassNotFoundException {
@@ -217,23 +217,23 @@ public abstract class AbstractScriptData implements ScriptData {
 		return DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
 	}
 
-	String getPrimaryKeyColumns(String tableName) {
+	String getPrimaryKeyColumns(DatabaseObject table) {
 
 		if (primaryKey == null) {
 			primaryKey = loadPrimaryKey();
 		}
-		return primaryKey.get(tableName);
+		return primaryKey.get(table);
 	}
 
-	List<ForeignKey> getForeignKey(String tableName) {
+	List<ForeignKey> getForeignKey(DatabaseObject table) {
 
 		if (foreignKey == null) {
 			foreignKey = loadForeignKey();
 		}
-		return foreignKey.stream().filter(c -> tableName.equals(c.getFkTableName())).collect(Collectors.toList());
+		return foreignKey.stream().filter(c -> table.equals(c.getFkTable())).collect(Collectors.toList());
 	}
 
-	abstract Map<String, String> loadPrimaryKey();
+	abstract Map<DatabaseObject, String> loadPrimaryKey();
 
 	abstract List<ForeignKey> loadForeignKey();
 

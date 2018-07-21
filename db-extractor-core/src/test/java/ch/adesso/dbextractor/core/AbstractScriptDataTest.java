@@ -1,7 +1,7 @@
 package ch.adesso.dbextractor.core;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -11,7 +11,6 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,9 +34,6 @@ public class AbstractScriptDataTest {
 			else if (value instanceof Boolean) {
 				return (boolean) value ? "1" : "0";
 			}
-			else if (value instanceof Date) {
-				return toSqlValueString((Date) value);
-			}
 			else if (value instanceof String) {
 				return "'" + ((String) value).replace("'", "''") + "'";
 			}
@@ -50,21 +46,17 @@ public class AbstractScriptDataTest {
 		}
 		
 		@Override
-		Map<String, String> loadPrimaryKey() {
-			// TODO Auto-generated method stub
+		Map<DatabaseObject, String> loadPrimaryKey() {
 			return null;
 		}
 		
 		@Override
 		List<ForeignKey> loadForeignKey() {
-			// TODO Auto-generated method stub
 			return null;
 		}
 		
 		@Override
 		void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException {
-			// TODO Auto-generated method stub
-			
 		}
 	};
 	
@@ -72,12 +64,12 @@ public class AbstractScriptDataTest {
 	public void handleForeignKeyConstraints() throws SQLException {
 		
 		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(anyString());
+		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		
-		ForeignKey fk = new ForeignKey(null, null, "fkTableName", "pkTableName");
+		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
 		fk.getFkColumnNames().add("fkColumnName1");
 		fk.getPkColumnNames().add("pkColumnName1");
 		
@@ -91,26 +83,26 @@ public class AbstractScriptDataTest {
 		
 		ResultSet rs = mock(ResultSet.class);
 		
-		ForeignKey fk = new ForeignKey(null, null, "fkTableName", "pkTableName");
+		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
 		fk.getFkColumnNames().add("fkColumnName1");
 		fk.getPkColumnNames().add("pkColumnName1");
 		
 		scriptData.handleForeignKeyConstraints(null, Collections.singletonList(fk), rs);
 		
-		verify(scriptData, Mockito.never()).getTableDataFilter(anyString());
+		verify(scriptData, Mockito.never()).getTableDataFilter(any(DatabaseObject.class));
 	}
 	
 	@Test
 	public void handleForeignKeyConstraintsCombined() throws SQLException {
 		
 		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(anyString());
+		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		doReturn("fkColumnValue2").when(rs).getObject(eq("fkColumnName2"));
 		
-		ForeignKey fk = new ForeignKey(null, null, "fkTableName", "pkTableName");
+		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 		
@@ -124,12 +116,12 @@ public class AbstractScriptDataTest {
 	public void handleForeignKeyConstraintsCombinedNullValue() throws SQLException {
 		
 		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(anyString());
+		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		
-		ForeignKey fk = new ForeignKey(null, null, "fkTableName", "pkTableName");
+		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 		
