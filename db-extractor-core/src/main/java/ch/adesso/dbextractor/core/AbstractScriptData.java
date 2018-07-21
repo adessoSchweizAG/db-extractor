@@ -82,13 +82,13 @@ public abstract class AbstractScriptData implements ScriptData {
 
 		for (Iterator<TableDataFilter> it = tables.iterator(); it.hasNext();) {
 			TableDataFilter table = it.next();
-			if (table.hasFilter()) {
 
-				if (table.getOrderBy() == null) {
-					table.setOrderBy(getOrderBy(table.getTableName()));
-				}
-			} else {
+			if (!table.hasFilter()) {
 				it.remove();
+				continue;
+			}
+			if (table.getOrderBy() == null) {
+				table.setOrderBy(getPrimaryKeyColumns(table.getTableName()));
 			}
 		}
 
@@ -215,10 +215,6 @@ public abstract class AbstractScriptData implements ScriptData {
 
 		Class.forName(jdbcDriver);
 		return DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
-	}
-
-	protected String getOrderBy(String tableName) {
-		return getPrimaryKeyColumns(tableName);
 	}
 
 	String getPrimaryKeyColumns(String tableName) {
