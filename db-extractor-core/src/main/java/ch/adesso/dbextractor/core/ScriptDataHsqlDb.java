@@ -91,15 +91,15 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 
 			Map<DatabaseObject, ForeignKey> mapForeignKey = new HashMap<>();
 			while (rs.next()) {
-				DatabaseObject constraint = new DatabaseObject(
+				DatabaseObject constraint = databaseObject(
 						rs.getString("CONSTRAINT_CATALOG"), rs.getString("CONSTRAINT_SCHEMA"), rs.getString("CONSTRAINT_NAME"));
-				DatabaseObject fkTable = new DatabaseObject(
+				DatabaseObject fkTable = databaseObject(
 						rs.getString("FK_TABLE_CATALOG"), rs.getString("FK_TABLE_SCHEMA"), rs.getString("FK_TABLE_NAME"));
-				DatabaseObject pkTable = new DatabaseObject(
+				DatabaseObject pkTable = databaseObject(
 						rs.getString("PK_TABLE_CATALOG"), rs.getString("PK_TABLE_SCHEMA"), rs.getString("PK_TABLE_NAME"));
 				
-				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint, k ->
-					new ForeignKey(k.getSchema(), k.getName(), fkTable.getName(), pkTable.getName()));
+				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint,
+						k -> new ForeignKey(constraint, fkTable, pkTable));
 				
 				foreignKey.getFkColumnNames().add(rs.getString("FK_COLUMN_NAME"));
 				foreignKey.getPkColumnNames().add(rs.getString("PK_COLUMN_NAME"));
@@ -111,26 +111,30 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 	}
 
 	@Override
-	Map<String, String> loadPrimaryKey() {
+	Map<DatabaseObject, String> loadPrimaryKey() {
 		try (Connection con = getConnection();
 				Statement stmt = con.createStatement();
 				ResultSet rs = stmt.executeQuery(SQL_SELECT_PRIMARY_KEY);) {
 
-			Map<String, String> result = new HashMap<>();
+			Map<DatabaseObject, String> result = new HashMap<>();
 			while (rs.next()) {
-				String tableName = rs.getString("TABLE_NAME");
+				DatabaseObject table = databaseObject(
+						rs.getString("TABLE_CATALOG"), rs.getString("TABLE_SCHEMA"), rs.getString("TABLE_NAME"));
 				String columnName = rs.getString("COLUMN_NAME");
-
-				if (result.containsKey(tableName)) {
-					result.put(tableName, result.get(tableName) + ", " + columnName);
-				}
-				else {
-					result.put(tableName, columnName);
-				}
+				
+				result.merge(table, columnName,
+						(oldValue, value) -> oldValue + ", " + value);
 			}
 			return result;
 		} catch (ClassNotFoundException | SQLException e) {
 			throw new IllegalStateException(e);
 		}
+	}
+
+	private DatabaseObject databaseObject(String catalog, String schema, String name) {
+		return new DatabaseObject(
+				"PUBLIC".equalsIgnoreCase(catalog) ? null : catalog,
+				"PUBLIC".equalsIgnoreCase(schema) ? null : schema,
+				name);
 	}
 }

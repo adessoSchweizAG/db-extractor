@@ -5,41 +5,35 @@ import java.util.List;
 
 public class ForeignKey {
 
-    private final String owner;
-    private final String name;
-    private final String fkTableName;
-    private final List<String> fkColumnNames = new LinkedList<>();
-    private final String pkTableName;
-    private final List<String> pkColumnNames = new LinkedList<>();
+	private final DatabaseObject constraint;
+	private final DatabaseObject fkTable;
+	private final List<String> fkColumnNames = new LinkedList<>();
+	private final DatabaseObject pkTable;
+	private final List<String> pkColumnNames = new LinkedList<>();
 
-    public ForeignKey(String owner, String name, String fkTableName, String pkTableName) {
-        this.owner = owner;
-        this.name = name;
-        this.fkTableName = fkTableName;
-        this.pkTableName = pkTableName;
-    }
+	public ForeignKey(DatabaseObject constraint, DatabaseObject fkTable, DatabaseObject pkTable) {
+		this.constraint = constraint;
+		this.fkTable = fkTable;
+		this.pkTable = pkTable;
+	}
 
-    public String getOwner() {
-        return owner;
-    }
+	public DatabaseObject getConstraint() {
+		return constraint;
+	}
 
-    public String getName() {
-        return name;
-    }
+	public DatabaseObject getFkTable() {
+		return fkTable;
+	}
 
-    public String getFkTableName() {
-        return fkTableName;
-    }
+	public List<String> getFkColumnNames() {
+		return fkColumnNames;
+	}
 
-    public List<String> getFkColumnNames() {
-        return fkColumnNames;
-    }
+	public DatabaseObject getPkTable() {
+		return pkTable;
+	}
 
-    public String getPkTableName() {
-        return pkTableName;
-    }
-
-    public List<String> getPkColumnNames() {
-        return pkColumnNames;
-    }
+	public List<String> getPkColumnNames() {
+		return pkColumnNames;
+	}
 }

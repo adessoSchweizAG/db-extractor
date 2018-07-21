@@ -1,7 +1,5 @@
 package ch.adesso.dbextractor.core;
 
-import java.util.Objects;
-
 public class DatabaseObject {
 
 	private final String catalog;
@@ -9,7 +7,11 @@ public class DatabaseObject {
 	private final String name;
 
 	public DatabaseObject(String name) {
-		this(null, null, name);
+		this(null, name);
+	}
+
+	public DatabaseObject(String schema, String name) {
+		this(null, schema, name);
 	}
 
 	public DatabaseObject(String catalog, String schema, String name) {
@@ -62,13 +64,13 @@ public class DatabaseObject {
 		}
 		DatabaseObject other = (DatabaseObject) obj;
 
-		return Objects.equals(name, other.name)
-				&& (catalog == null || other.catalog == null || Objects.equals(catalog, other.catalog))
-				&& (schema == null || other.schema == null || Objects.equals(schema, other.schema));
+		return (name != null && name.equalsIgnoreCase(other.name))
+				&& (catalog == null || other.catalog == null || catalog.equalsIgnoreCase(other.catalog))
+				&& (schema == null || other.schema == null || schema.equalsIgnoreCase(other.schema));
 	}
 
 	@Override
 	public int hashCode() {
-		return name.hashCode();
+		return name.toUpperCase().hashCode();
 	}
 }
