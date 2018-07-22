@@ -121,6 +121,8 @@ public abstract class AbstractScriptData implements ScriptData {
 				sb.replace(sb.length() - 5, sb.length(), ")");
 				getTableDataFilter(fk.getPkTable()).addWhereSql(sb.toString());
 			}
+
+			table.getDependsOn().add(fk.getPkTable());
 		}
 	}
 
