@@ -63,19 +63,20 @@ public class AbstractScriptDataTest {
 	@Test
 	public void handleForeignKeyConstraints() throws SQLException {
 		
-		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
+		TableDataFilter pkTableDataFilter = new TableDataFilter("pkTableName");
+		doReturn(pkTableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		
-		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
+		TableDataFilter fkTableDataFilter = new TableDataFilter("fkTableName");
+		ForeignKey fk = new ForeignKey(null, fkTableDataFilter.getTable(), pkTableDataFilter.getTable());
 		fk.getFkColumnNames().add("fkColumnName1");
 		fk.getPkColumnNames().add("pkColumnName1");
 		
-		scriptData.handleForeignKeyConstraints(null, Collections.singletonList(fk), rs);
+		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
-		assertEquals("SELECT * FROM test WHERE pkColumnName1 IN ('fkColumnValue1')", tableDataFilter.toSelectSql());
+		assertEquals("SELECT * FROM pkTableName WHERE pkColumnName1 IN ('fkColumnValue1')", pkTableDataFilter.toSelectSql());
 	}
 	
 	@Test
@@ -83,11 +84,12 @@ public class AbstractScriptDataTest {
 		
 		ResultSet rs = mock(ResultSet.class);
 		
-		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
+		TableDataFilter fkTableDataFilter = new TableDataFilter("fkTableName");
+		ForeignKey fk = new ForeignKey(null, fkTableDataFilter.getTable(), new DatabaseObject("pkTableName"));
 		fk.getFkColumnNames().add("fkColumnName1");
 		fk.getPkColumnNames().add("pkColumnName1");
 		
-		scriptData.handleForeignKeyConstraints(null, Collections.singletonList(fk), rs);
+		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
 		verify(scriptData, Mockito.never()).getTableDataFilter(any(DatabaseObject.class));
 	}
@@ -95,40 +97,42 @@ public class AbstractScriptDataTest {
 	@Test
 	public void handleForeignKeyConstraintsCombined() throws SQLException {
 		
-		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
+		TableDataFilter pkTableDataFilter = new TableDataFilter("pkTableName");
+		doReturn(pkTableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		doReturn("fkColumnValue2").when(rs).getObject(eq("fkColumnName2"));
 		
-		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
+		TableDataFilter fkTableDataFilter = new TableDataFilter("fkTableName");
+		ForeignKey fk = new ForeignKey(null, fkTableDataFilter.getTable(), pkTableDataFilter.getTable());
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 		
-		scriptData.handleForeignKeyConstraints(null, Collections.singletonList(fk), rs);
+		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
-		assertEquals("SELECT * FROM test WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 = 'fkColumnValue2')",
-				tableDataFilter.toSelectSql());
+		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 = 'fkColumnValue2')",
+				pkTableDataFilter.toSelectSql());
 	}
 	
 	@Test
 	public void handleForeignKeyConstraintsCombinedNullValue() throws SQLException {
 		
-		TableDataFilter tableDataFilter = new TableDataFilter("test");
-		doReturn(tableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
+		TableDataFilter pkTableDataFilter = new TableDataFilter("pkTableName");
+		doReturn(pkTableDataFilter).when(scriptData).getTableDataFilter(any(DatabaseObject.class));
 		
 		ResultSet rs = mock(ResultSet.class);
 		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
 		
-		ForeignKey fk = new ForeignKey(null, new DatabaseObject("fkTableName"), new DatabaseObject("pkTableName"));
+		TableDataFilter fkTableDataFilter = new TableDataFilter("fkTableName");
+		ForeignKey fk = new ForeignKey(null, fkTableDataFilter.getTable(), pkTableDataFilter.getTable());
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 		
-		scriptData.handleForeignKeyConstraints(null, Collections.singletonList(fk), rs);
+		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
-		assertEquals("SELECT * FROM test WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 IS NULL)",
-				tableDataFilter.toSelectSql());
+		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 IS NULL)",
+				pkTableDataFilter.toSelectSql());
 	}
 	
 }
