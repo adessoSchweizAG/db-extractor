@@ -3,63 +3,44 @@ package ch.adesso.dbextractor.core;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.Map;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
-public class AbstractScriptDataTest {
+public class ScriptDataImplTest {
 
-	@Spy
-	private AbstractScriptData scriptData = new AbstractScriptData(null, null, null, null) {
-		
-		@Override
-		String toSqlValueString(Object value) {
+	private ScriptDataImpl scriptData;
+	
+	@Before
+	public void setup() {
+
+		DbSupport dbSupport = mock(DbSupport.class);
+		doAnswer(invocation -> {
+			Object value = invocation.getArgument(0);
 			if (value == null) {
 				return "NULL";
-			}
-			else if (value instanceof Boolean) {
+			} else if (value instanceof Boolean) {
 				return (boolean) value ? "1" : "0";
-			}
-			else if (value instanceof String) {
+			} else if (value instanceof String) {
 				return "'" + ((String) value).replace("'", "''") + "'";
 			}
 			return value.toString();
-		}
-		
-		@Override
-		List<TableDataFilter> postProcess(List<TableDataFilter> tables) {
-			return tables;
-		}
-		
-		@Override
-		Map<DatabaseObject, String> loadPrimaryKey() {
-			return null;
-		}
-		
-		@Override
-		List<ForeignKey> loadForeignKey() {
-			return null;
-		}
-		
-		@Override
-		void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException {
-		}
-	};
-	
+		}).when(dbSupport).toSqlValueString(any());
+
+		scriptData = spy(new ScriptDataImpl(dbSupport));
+	}
+
 	@Test
 	public void handleForeignKeyConstraints() throws SQLException {
 		

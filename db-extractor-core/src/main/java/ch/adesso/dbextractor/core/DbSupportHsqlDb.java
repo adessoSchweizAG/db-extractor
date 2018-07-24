@@ -13,7 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ScriptDataHsqlDb extends AbstractScriptData {
+import javax.sql.DataSource;
+
+public class DbSupportHsqlDb implements DbSupport {
 
 	private static final String SQL_SELECT_PRIMARY_KEY = "SELECT c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
 			+ "  a.TABLE_CATALOG, a.TABLE_SCHEMA, a.TABLE_NAME, a.COLUMN_NAME, a.ORDINAL_POSITION \r\n"
@@ -32,59 +34,19 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 			+ "WHERE c.CONSTRAINT_TYPE = 'FOREIGN KEY' \r\n"
 			+ "ORDER BY c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, fc.POSITION_IN_UNIQUE_CONSTRAINT";
 
-	private static final String JDBC_DRIVER = "org.hsqldb.jdbcDriver";
+	private DataSource dataSource;
 
-	public ScriptDataHsqlDb(String jdbcUrl, String jdbcUser, String jdbcPassword) {
-		super(JDBC_DRIVER, jdbcUrl, jdbcUser, jdbcPassword);
+	public DbSupportHsqlDb(DataSource dataSource) {
+		this.dataSource = dataSource;
 	}
 
 	@Override
-	List<TableDataFilter> postProcess(List<TableDataFilter> tables) {
-		return tables;
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
 	}
 
 	@Override
-	String toSqlValueString(Object value) {
-		if (value == null) {
-			return "NULL";
-		}
-		else if (value instanceof Boolean) {
-			return (boolean) value ? "1" : "0";
-		}
-		else if (value instanceof Date) {
-			return toSqlValueString((Date) value);
-		}
-		else if (value instanceof String) {
-			return "'" + ((String) value).replace("'", "''") + "'";
-		}
-		return value.toString();
-	}
-
-	private String toSqlValueString(Date value) {
-
-		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(value);
-		if (cal.get(Calendar.MILLISECOND) > 0) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-			return "TIMESTAMP '" + sdf.format(value) + "'";
-		}
-		else if (cal.get(Calendar.SECOND) > 0 || cal.get(Calendar.MINUTE) > 0 || cal.get(Calendar.HOUR_OF_DAY) > 0) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			return "TIMESTAMP '" + sdf.format(value) + "'";
-		}
-		else {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			return "TIMESTAMP ('" + sdf.format(value) + "')";
-		}
-	}
-
-	@Override
-	void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException {
-
-	}
-
-	@Override
-	List<ForeignKey> loadForeignKey() {
+	public List<ForeignKey> loadForeignKey() {
 		try (Connection con = getConnection();
 				Statement stmt = con.createStatement();
 				ResultSet rs = stmt.executeQuery(SQL_SELECT_FOREIGN_KEY);) {
@@ -97,21 +59,21 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 						rs.getString("FK_TABLE_CATALOG"), rs.getString("FK_TABLE_SCHEMA"), rs.getString("FK_TABLE_NAME"));
 				DatabaseObject pkTable = databaseObject(
 						rs.getString("PK_TABLE_CATALOG"), rs.getString("PK_TABLE_SCHEMA"), rs.getString("PK_TABLE_NAME"));
-				
+
 				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint,
 						k -> new ForeignKey(constraint, fkTable, pkTable));
-				
+
 				foreignKey.getFkColumnNames().add(rs.getString("FK_COLUMN_NAME"));
 				foreignKey.getPkColumnNames().add(rs.getString("PK_COLUMN_NAME"));
 			}
 			return new ArrayList<>(mapForeignKey.values());
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			throw new IllegalStateException(e);
 		}
 	}
 
 	@Override
-	Map<DatabaseObject, String> loadPrimaryKey() {
+	public Map<DatabaseObject, String> loadPrimaryKey() {
 		try (Connection con = getConnection();
 				Statement stmt = con.createStatement();
 				ResultSet rs = stmt.executeQuery(SQL_SELECT_PRIMARY_KEY);) {
@@ -121,12 +83,12 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 				DatabaseObject table = databaseObject(
 						rs.getString("TABLE_CATALOG"), rs.getString("TABLE_SCHEMA"), rs.getString("TABLE_NAME"));
 				String columnName = rs.getString("COLUMN_NAME");
-				
+
 				result.merge(table, columnName,
 						(oldValue, value) -> oldValue + ", " + value);
 			}
 			return result;
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			throw new IllegalStateException(e);
 		}
 	}
@@ -137,4 +99,35 @@ public class ScriptDataHsqlDb extends AbstractScriptData {
 				"PUBLIC".equalsIgnoreCase(schema) ? null : schema,
 				name);
 	}
+
+	@Override
+	public String toSqlValueString(Object value) {
+		if (value == null) {
+			return "NULL";
+		} else if (value instanceof Boolean) {
+			return (boolean) value ? "1" : "0";
+		} else if (value instanceof Date) {
+			return toSqlValueString((Date) value);
+		} else if (value instanceof String) {
+			return "'" + ((String) value).replace("'", "''") + "'";
+		}
+		return value.toString();
+	}
+
+	private String toSqlValueString(Date value) {
+
+		Calendar cal = GregorianCalendar.getInstance();
+		cal.setTime(value);
+		if (cal.get(Calendar.MILLISECOND) > 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+			return "TIMESTAMP '" + sdf.format(value) + "'";
+		} else if (cal.get(Calendar.SECOND) > 0 || cal.get(Calendar.MINUTE) > 0 || cal.get(Calendar.HOUR_OF_DAY) > 0) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			return "TIMESTAMP '" + sdf.format(value) + "'";
+		} else {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			return "DATE '" + sdf.format(value) + "'";
+		}
+	}
+
 }

@@ -12,29 +12,49 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.List;
+import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
 
+import javax.sql.DataSource;
+
+import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.hamcrest.CoreMatchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class ScriptDataHsqlDbTest {
+public class DbSupportHsqlDbTest {
 
-	private AbstractScriptData scriptData = new ScriptDataHsqlDb("jdbc:hsqldb:mem:memdb", "SA", null);
-	
+	private DataSource dataSource;
+	private DbSupport dbSupport;
+
 	@Before
-	public void setupDb() throws ClassNotFoundException, SQLException {
-		try (Connection con = scriptData.getConnection()) {
-			runSqlScript(con, ScriptDataHsqlDbTest.class.getResourceAsStream("ScriptDataHsqlDbTest.create.sql"));
-			runSqlScript(con, ScriptDataHsqlDbTest.class.getResourceAsStream("ScriptDataHsqlDbTest.data.sql"));
+	public void setupDb() throws Exception {
+		
+		Properties properties = dataSourceProperties("jdbc:hsqldb:mem:memdb");
+		dataSource = BasicDataSourceFactory.createDataSource(properties);
+		
+		try (Connection con = dataSource.getConnection()) {
+			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.create.sql"));
+			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.data.sql"));
 		}
+
+		dbSupport = new DbSupportHsqlDb(dataSource);
+	}
+
+	private Properties dataSourceProperties(String url) {
+
+		Properties properties = new Properties();
+		properties.setProperty("driverClassName", "org.hsqldb.jdbcDriver");
+		properties.setProperty("url", url);
+		properties.setProperty("username", "SA");
+		return properties;
 	}
 
 	@After
-	public void shutdownDb() throws ClassNotFoundException, SQLException {
-		try (Connection con = scriptData.getConnection();
+	public void shutdownDb() throws SQLException {
+		try (Connection con = dataSource.getConnection();
 				Statement stmt = con.createStatement()) {
 			
 			stmt.executeUpdate("SHUTDOWN");
@@ -43,19 +63,20 @@ public class ScriptDataHsqlDbTest {
 	
 	@Test
 	public void loadPrimaryKey() {
-		scriptData.loadPrimaryKey();
+		dbSupport.loadPrimaryKey();
 	}
 	
 	@Test
 	public void loadForeignKey() {
-		scriptData.loadForeignKey();
+		dbSupport.loadForeignKey();
 	}
 	
 	@Test
-	public void scriptData() throws ClassNotFoundException, SQLException {
+	public void scriptData() throws SQLException {
 		
 		List<TableDataFilter> list = Collections.singletonList(new TableDataFilter("ITEM").addWhereSql("InvoiceID = 0"));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ScriptData scriptData = new ScriptDataImpl(dbSupport);
 		scriptData.script(list, new PrintStream(out));
 
 		String generateScript = out.toString();
@@ -78,16 +99,17 @@ public class ScriptDataHsqlDbTest {
 	}
 
 	@Test
-	public void scriptDataAndRun() throws ClassNotFoundException, SQLException {
+	public void scriptDataAndRun() throws SQLException {
 		
 		List<TableDataFilter> list = Collections.singletonList(new TableDataFilter("ITEM").addWhereSql("InvoiceID = 0"));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ScriptData scriptData = new ScriptDataImpl(dbSupport);
 		scriptData.script(list, new PrintStream(out));
 	
 		try (Connection con = DriverManager.getConnection("jdbc:hsqldb:mem:memdbTest", "SA", null);
 				Statement stmt = con.createStatement()) {
 
-			runSqlScript(con, ScriptDataHsqlDbTest.class.getResourceAsStream("ScriptDataHsqlDbTest.create.sql"));
+			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.create.sql"));
 			runSqlScript(con, new ByteArrayInputStream(out.toByteArray()));
 			stmt.executeUpdate("SHUTDOWN");
 		}
