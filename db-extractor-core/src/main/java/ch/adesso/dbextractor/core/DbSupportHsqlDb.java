@@ -105,7 +105,7 @@ public class DbSupportHsqlDb implements DbSupport {
 		if (value == null) {
 			return "NULL";
 		} else if (value instanceof Boolean) {
-			return (boolean) value ? "1" : "0";
+			return (boolean) value ? "TRUE" : "FALSE";
 		} else if (value instanceof Date) {
 			return toSqlValueString((Date) value);
 		} else if (value instanceof String) {
@@ -116,18 +116,21 @@ public class DbSupportHsqlDb implements DbSupport {
 
 	private String toSqlValueString(Date value) {
 
-		Calendar cal = GregorianCalendar.getInstance();
-		cal.setTime(value);
-		if (cal.get(Calendar.MILLISECOND) > 0) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-			return "TIMESTAMP '" + sdf.format(value) + "'";
-		} else if (cal.get(Calendar.SECOND) > 0 || cal.get(Calendar.MINUTE) > 0 || cal.get(Calendar.HOUR_OF_DAY) > 0) {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			return "TIMESTAMP '" + sdf.format(value) + "'";
+		final SimpleDateFormat sdf;
+		if (value instanceof java.sql.Time) {
+			sdf = new SimpleDateFormat("'TIME '''HH:mm:ss''");
+		} else if (value instanceof java.sql.Date) {
+			sdf = new SimpleDateFormat("'DATE '''yyyy-MM-dd''");
 		} else {
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			return "DATE '" + sdf.format(value) + "'";
+			Calendar cal = GregorianCalendar.getInstance();
+			cal.setTime(value);
+			if (cal.get(Calendar.MILLISECOND) == 0) {
+				sdf = new SimpleDateFormat("'TIMESTAMP '''yyyy-MM-dd HH:mm:ss''");
+			} else {
+				sdf = new SimpleDateFormat("'TIMESTAMP '''yyyy-MM-dd HH:mm:ss.SSS''");
+			}
 		}
+		return sdf.format(value);
 	}
 
 }
