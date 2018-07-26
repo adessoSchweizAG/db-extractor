@@ -2,7 +2,6 @@ package ch.adesso.dbextractor.core;
 
 import java.io.PrintStream;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
@@ -16,22 +15,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public abstract class AbstractScriptData implements ScriptData {
+public class ScriptDataImpl implements ScriptData {
 
-	private final String jdbcDriver;
-	private final String jdbcUrl;
-	private final String jdbcUser;
-	private final String jdbcPassword;
+	private final DbSupport inputDbSupport;
+	private final DbSupport outputDbSupport;
 
 	private Map<DatabaseObject, String> primaryKey;
 	private List<ForeignKey> foreignKey;
 	private Map<DatabaseObject, TableDataFilter> mapTables = new HashMap<>();
 
-	public AbstractScriptData(String jdbcDriver, String jdbcUrl, String jdbcUser, String jdbcPassword) {
-		this.jdbcDriver = jdbcDriver;
-		this.jdbcUrl = jdbcUrl;
-		this.jdbcUser = jdbcUser;
-		this.jdbcPassword = jdbcPassword;
+	public ScriptDataImpl(DbSupport dbSupport) {
+		this.inputDbSupport = dbSupport;
+		this.outputDbSupport = dbSupport;
 	}
 
 	@Override
@@ -62,16 +57,15 @@ public abstract class AbstractScriptData implements ScriptData {
 					table.setFilterModified(false);
 
 					List<ForeignKey> foreignKeys = getForeignKey(table.getTable());
-					try (Connection con = getConnection();
+					try (Connection con = inputDbSupport.getConnection();
 							Statement stmt = con.createStatement();
 							ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
 
 						while (rs.next()) {
 							handleForeignKeyConstraints(table, foreignKeys, rs);
-							handleSpecialConstraints(table, rs);
 						}
 
-					} catch (ClassNotFoundException | SQLException e) {
+					} catch (SQLException e) {
 						throw new IllegalStateException(e);
 					}
 				}
@@ -92,7 +86,7 @@ public abstract class AbstractScriptData implements ScriptData {
 			}
 		}
 
-		return postProcess(tables);
+		return tables;
 	}
 
 	void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
@@ -114,7 +108,7 @@ public abstract class AbstractScriptData implements ScriptData {
 						sb.append(fk.getPkColumnNames().get(i)).append(" IS NULL");
 					}
 					else {
-						sb.append(fk.getPkColumnNames().get(i)).append(" = ").append(toSqlValueString(columnValue));
+						sb.append(fk.getPkColumnNames().get(i)).append(" = ").append(inputDbSupport.toSqlValueString(columnValue));
 					}
 					sb.append(" AND ");
 				}
@@ -126,12 +120,8 @@ public abstract class AbstractScriptData implements ScriptData {
 		}
 	}
 
-	abstract void handleSpecialConstraints(TableDataFilter table, ResultSet rs) throws SQLException;
-
-	abstract List<TableDataFilter> postProcess(List<TableDataFilter> tables);
-
 	void printInsertSql(TableDataFilter table, PrintStream outStream) {
-		try (Connection con = getConnection();
+		try (Connection con = inputDbSupport.getConnection();
 				Statement stmt = con.createStatement();
 				ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
 
@@ -152,19 +142,17 @@ public abstract class AbstractScriptData implements ScriptData {
 					if (i > 1) {
 						sbSqlInsert.append(", ");
 					}
-					sbSqlInsert.append(toSqlValueString(rs.getObject(i)));
+					sbSqlInsert.append(outputDbSupport.toSqlValueString(rs.getObject(i)));
 				}
 				sbSqlInsert.append(");");
 
 				outStream.println(sbSqlInsert.toString());
 			}
 
-		} catch (ClassNotFoundException | SQLException e) {
+		} catch (SQLException e) {
 			throw new IllegalStateException(e);
 		}
 	}
-
-	abstract String toSqlValueString(Object value);
 
 	List<TableDataFilter> sortTables() {
 		List<TableDataFilter> tables = new ArrayList<>(mapTables.values());
@@ -213,16 +201,10 @@ public abstract class AbstractScriptData implements ScriptData {
 		return mapTables.computeIfAbsent(table, TableDataFilter::new);
 	}
 
-	Connection getConnection() throws SQLException, ClassNotFoundException {
-
-		Class.forName(jdbcDriver);
-		return DriverManager.getConnection(jdbcUrl, jdbcUser, jdbcPassword);
-	}
-
 	String getPrimaryKeyColumns(DatabaseObject table) {
 
 		if (primaryKey == null) {
-			primaryKey = loadPrimaryKey();
+			primaryKey = inputDbSupport.loadPrimaryKey();
 		}
 		return primaryKey.get(table);
 	}
@@ -230,13 +212,9 @@ public abstract class AbstractScriptData implements ScriptData {
 	List<ForeignKey> getForeignKey(DatabaseObject table) {
 
 		if (foreignKey == null) {
-			foreignKey = loadForeignKey();
+			foreignKey = inputDbSupport.loadForeignKey();
 		}
 		return foreignKey.stream().filter(c -> table.equals(c.getFkTable())).collect(Collectors.toList());
 	}
-
-	abstract Map<DatabaseObject, String> loadPrimaryKey();
-
-	abstract List<ForeignKey> loadForeignKey();
 
 }
