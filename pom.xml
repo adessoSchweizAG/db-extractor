@@ -16,15 +16,12 @@
 		<url>https://www.adesso.ch</url>
 	</organization>
 
-
 	<modules>
 		<module>db-extractor-core</module>
 	</modules>
 
 	<properties>
-
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
 	</properties>
 
 	<build>
@@ -135,9 +132,32 @@
 						</execution>
 					</executions>
 				</plugin>
-				
+
+				<plugin>
+					<groupId>org.owasp</groupId>
+					<artifactId>dependency-check-maven</artifactId>
+					<version>3.3.0</version>
+					<executions>
+						<execution>
+							<goals>
+								<goal>check</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<failBuildOnCVSS>8</failBuildOnCVSS>
+					</configuration>
+				</plugin>
+
 			</plugins>
 		</pluginManagement>
+
+		<plugins>
+			<plugin>
+				<groupId>org.owasp</groupId>
+				<artifactId>dependency-check-maven</artifactId>
+			</plugin>
+		</plugins>
 
 	</build>
 
