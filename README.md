@@ -7,6 +7,64 @@
 # db-extractor
 Selectivly extraction of data from relational databases into sql scripts
 
+# Example
+
+The selection condition for dbextractor in this example only selects all rows in table `item` with `InvocationID = 0`.
+
+```
++----------+    +----------+    +----------+
+| Customer |---<| Invoice  |---<| Item     |
++----------+    +----------+    +----------+
+                                      |
+                                     /|\
+                                +----------+
+                                | Product  |
+                                +----------+
+```
+
+DbExtractor follow automatically the foreign key constraints defined in the database and generates a sql script containing all data required to create a consistent export. Look like this:
+
+```sql
+-- Input:
+-- SELECT * FROM ITEM WHERE InvoiceID = 0
+
+-- SELECT * FROM CUSTOMER WHERE ID IN (0) ORDER BY ID;
+INSERT INTO CUSTOMER (ID, FIRSTNAME, LASTNAME, STREET, CITY) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');
+
+-- SELECT * FROM PRODUCT WHERE ID IN (7, 14, 47) ORDER BY ID;
+INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (7, 'Telephone Shoe', 84);
+INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (14, 'Telephone Iron', 124);
+INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (47, 'Ice Tea Iron', 178);
+
+-- SELECT * FROM INVOICE WHERE ID IN (0) ORDER BY ID;
+INSERT INTO INVOICE (ID, CUSTOMERID, TOTAL) VALUES (0, 0, 3898);
+
+-- SELECT * FROM ITEM WHERE InvoiceID = 0 ORDER BY ID;
+INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (0, 0, 2, 47, 3, 178);
+INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (1, 0, 1, 14, 19, 124);
+INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (2, 0, 0, 7, 12, 84);
+```
+
+# Command Line Interface
+
+The command line interface requires an installed java runtime 1.8 or newer.
+
+```sh
+bin/dbExtractor -driver org.hsqldb.jdbc.JDBCDriver
+ -url jdbc:hsqldb:hsql//localhost/example -username SA \
+ -FItem="InvocationID = 0" -OItem="ID"
+```
+
+Paramter | Description
+------ | -----------
+`-help` | Help text of dbextractor
+`-driver <jdbc.driver.ClassName>` | Database driver class name
+`-url <value>` | Database JDBC URL
+`-username <value>` | Database username
+`-password <value>` | Database password
+`-F<TableName>="<whereCondition>"` | Table and where condition to select the row to start data extraction.
+`-O<TableName>="<orderByCondition>"` | Optional order by condition for the specified table. Default sort order is by primary key.
+
 # Maven Repository
 To use db-extractor-core in your own project you can include the following maven settings.
 

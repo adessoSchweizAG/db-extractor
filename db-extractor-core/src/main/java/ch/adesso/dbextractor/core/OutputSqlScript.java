@@ -6,6 +6,7 @@ import java.io.StringWriter;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 
 public class OutputSqlScript implements DataOutput {
@@ -30,7 +31,7 @@ public class OutputSqlScript implements DataOutput {
 	}
 
 	@Override
-	public void initialize(List<TableDataFilter> filters) {
+	public void initialize(Collection<TableDataFilter> filters) {
 
 		printWriter.println("-- Input:");
 		for (TableDataFilter table : filters) {

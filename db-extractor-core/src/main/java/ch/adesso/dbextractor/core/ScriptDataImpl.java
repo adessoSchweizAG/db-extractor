@@ -26,7 +26,7 @@ public class ScriptDataImpl implements ScriptData {
 	}
 
 	@Override
-	public void script(List<TableDataFilter> filters, DataOutput output) {
+	public void script(Collection<TableDataFilter> filters, DataOutput output) {
 
 		output.initialize(filters);
 
