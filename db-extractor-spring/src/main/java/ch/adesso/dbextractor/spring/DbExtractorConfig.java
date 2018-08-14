@@ -2,7 +2,6 @@ package ch.adesso.dbextractor.spring;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -15,17 +14,14 @@ import ch.adesso.dbextractor.core.ScriptDataImpl;
 @Configuration
 public class DbExtractorConfig {
 
-	@Autowired
-	private DataSource dataSource;
-
 	@Bean
 	@Profile(value = { "default", "hsqldb" })
-	public DbSupport dbSupportHsqlDb() {
+	public DbSupport dbSupportHsqlDb(DataSource dataSource) {
 		return new DbSupportHsqlDb(dataSource);
 	}
 
 	@Bean
-	public ScriptData scriptData() {
-		return new ScriptDataImpl(dbSupportHsqlDb());
+	public ScriptData scriptData(DbSupport dbSupport) {
+		return new ScriptDataImpl(dbSupport);
 	}
 }
