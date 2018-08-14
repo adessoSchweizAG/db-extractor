@@ -18,7 +18,7 @@ import ch.adesso.dbextractor.core.ScriptData;
 import ch.adesso.dbextractor.core.TableDataFilter;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { TestConfig.class, DbExtractorConfig.class })
+@ContextConfiguration(classes = { TestDataSourceConfig.class, DbExtractorConfig.class })
 public class DbExtractorConfigTest {
 
 	@Autowired
