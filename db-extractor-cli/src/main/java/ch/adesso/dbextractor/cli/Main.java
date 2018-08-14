@@ -14,6 +14,8 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import ch.adesso.dbextractor.core.DatabaseObject;
 import ch.adesso.dbextractor.core.DbSupport;
@@ -24,6 +26,13 @@ import ch.adesso.dbextractor.core.ScriptDataImpl;
 import ch.adesso.dbextractor.core.TableDataFilter;
 
 public class Main {
+
+	private static final Logger LOGGER = LogManager.getLogger(Main.class);
+
+	private static final String JDBC_DRIVER_CLASSNAME = "driverClassName";
+	private static final String JDBC_URL = "url";
+	private static final String JDBC_USERNAME = "username";
+	private static final String JDBC_PASSWORD = "password";
 
 	private static final String OPT_DRIVER = "driver";
 	private static final String OPT_URL = "url";
@@ -70,18 +79,17 @@ public class Main {
 			}
 
 		} catch (Exception exp) {
-			// oops, something went wrong
-			System.err.println("Parsing failed.  Reason: " + exp.getClass().getName() +": " + exp.getMessage());
+			LOGGER.error("Parsing failed. Reason: {}: {}", exp.getClass().getName(), exp.getMessage(), exp);
 		}
 	}
 
 	private static BasicDataSource createDataSource(CommandLine line) throws Exception {
 		
 		Properties properties = new Properties();
-		properties.setProperty("driverClassName", line.getOptionValue(OPT_DRIVER));
-		properties.setProperty("url", line.getOptionValue(OPT_URL));
-		properties.setProperty("username", line.getOptionValue(OPT_USERNAME));
-		properties.setProperty("password", line.getOptionValue(OPT_PASSWORD, ""));
+		properties.setProperty(JDBC_DRIVER_CLASSNAME, line.getOptionValue(OPT_DRIVER));
+		properties.setProperty(JDBC_URL, line.getOptionValue(OPT_URL));
+		properties.setProperty(JDBC_USERNAME, line.getOptionValue(OPT_USERNAME));
+		properties.setProperty(JDBC_PASSWORD, line.getOptionValue(OPT_PASSWORD, ""));
 		
 		return BasicDataSourceFactory.createDataSource(properties);
 	}
