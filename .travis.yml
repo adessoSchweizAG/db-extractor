@@ -18,6 +18,7 @@ deploy:
   file_glob: true
   file:
     - db-extractor-core/target/db-extractor-core-*.jar
+	- db-extractor-core/target/db-extractor-core-*-sources.jar
   skip_cleanup: true
   on:
     repo: adessoSchweizAG/db-extractor
