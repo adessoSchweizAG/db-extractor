@@ -37,6 +37,8 @@ deploy:
   file:
     - db-extractor-core/target/db-extractor-core-$MVN_PROJECT_VERSION.jar
     - db-extractor-core/target/db-extractor-core-$MVN_PROJECT_VERSION-sources.jar
+    - db-extractor-core/target/db-extractor-cli-$MVN_PROJECT_VERSION-dist.zip
+    - db-extractor-core/target/db-extractor-cli-$MVN_PROJECT_VERSION-dist.tar.gz
     - db-extractor-core/target/db-extractor-spring-$MVN_PROJECT_VERSION.jar
     - db-extractor-core/target/db-extractor-spring-$MVN_PROJECT_VERSION-sources.jar
   skip_cleanup: true
