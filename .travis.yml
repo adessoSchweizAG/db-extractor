@@ -16,9 +16,10 @@ deploy:
   provider: releases
   api_key:
     secure: MQXH58dqx8VCZOmtcTWipAvRBjU3WdyJhncpXCRCy6THvYKErb6rnyqfGEkfvS82Hnhbl9nlH9JGc09C6CjGzjb08gQAQ6L6riOysB83kmnFIlT9TExLPQLE70xqq/MTbpGtC0RnPBmtOOmvvnbcMKVDhtmUvV0h5WMq5U2vNa0jfqHzc1h9LVQP51MhYRr5nNyAAEJcPvKe0GokbJlm/kGQP6sElWjpChrJU7247sAc69+yoJlZMVqedbQcWGvuzJNko/m/XCTScCqrS6hkPuupa00HfRUfdM2ak/VFnRu2HqQuWq84wOLlLmItXPV3OT6n5ybNOBm5oclGIkkSrf368Z91bpI8vvnMVhZOKT5G26XDPH+o5hTd4SHeHSBvrvtkL8cZGX3O+oAaIzmhLuH0L8UjGSBOcKbYr062U1VYJoYW+/6Fep4NbAsOi2UHu1nvHv46JO+FEgaQmwZ8Xy1P63GuVet5SloLqX1Z9nTPxTxVBmNGQGt0nNZ2Cf6V2REuo1TA1L6KYmxqreggxAnTSQVZSPpzlvPPL0+7NytOIU1HhIC/vd+CcghmqnHpONZQGaVshz9NojX24/Md+ArXOylkA1+58bPVZXHSIz5PM2k600Cs6HLGrICuYpFEJNaNeKIY5eNTsLuad3x601/b4Opv+ylcU0pLZEhpf0c=
-  tag_name: $TRAVIS_TAG
   name: $MVN_PROJECT_VERSION
   draft: true
+  tag_name: $TRAVIS_TAG
+  target_commitish: $TRAVIS_COMMIT
   file:
     - db-extractor-core/target/db-extractor-core-$MVN_PROJECT_VERSION.jar
     - db-extractor-core/target/db-extractor-core-$MVN_PROJECT_VERSION-sources.jar
