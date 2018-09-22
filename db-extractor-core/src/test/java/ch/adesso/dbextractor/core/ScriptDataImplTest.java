@@ -20,12 +20,13 @@ import org.mockito.Mockito;
 
 public class ScriptDataImplTest {
 
+	private DbSupport dbSupport;
 	private ScriptDataImpl scriptData;
 	
 	@Before
 	public void setup() {
 
-		DbSupport dbSupport = mock(DbSupport.class);
+		dbSupport = mock(DbSupport.class);
 		doAnswer(invocation -> {
 			Object value = invocation.getArgument(0);
 			if (value == null) {
@@ -57,7 +58,8 @@ public class ScriptDataImplTest {
 		
 		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
-		assertEquals("SELECT * FROM pkTableName WHERE pkColumnName1 IN ('fkColumnValue1')", pkTableDataFilter.toSelectSql());
+		assertEquals("SELECT * FROM pkTableName WHERE pkColumnName1 IN ('fkColumnValue1')", pkTableDataFilter.toSelectSql(dbSupport));
+		assertEquals("SELECT * FROM pkTableName WHERE pkColumnName1 IN ('fkColumnValue1')", pkTableDataFilter.toSelectSqlModified(dbSupport));
 	}
 	
 	@Test
@@ -93,7 +95,9 @@ public class ScriptDataImplTest {
 		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
 		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 = 'fkColumnValue2')",
-				pkTableDataFilter.toSelectSql());
+				pkTableDataFilter.toSelectSql(dbSupport));
+		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 = 'fkColumnValue2')",
+				pkTableDataFilter.toSelectSqlModified(dbSupport));
 	}
 	
 	@Test
@@ -113,7 +117,9 @@ public class ScriptDataImplTest {
 		scriptData.handleForeignKeyConstraints(fkTableDataFilter, Collections.singletonList(fk), rs);
 		
 		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 IS NULL)",
-				pkTableDataFilter.toSelectSql());
+				pkTableDataFilter.toSelectSql(dbSupport));
+		assertEquals("SELECT * FROM pkTableName WHERE (pkColumnName1 = 'fkColumnValue1' AND pkColumnName2 IS NULL)",
+				pkTableDataFilter.toSelectSqlModified(dbSupport));
 	}
 	
 }

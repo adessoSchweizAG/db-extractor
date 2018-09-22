@@ -35,7 +35,7 @@ public class OutputSqlScript implements DataOutput {
 		printWriter.println("-- Input:");
 		for (TableDataFilter table : filters) {
 			if (table.hasFilter()) {
-				printWriter.println("-- " + table.toSelectSql());
+				printWriter.println("-- " + table.toSelectSql(dbSupport));
 			}
 		}
 		printWriter.println();
@@ -46,7 +46,7 @@ public class OutputSqlScript implements DataOutput {
 	public void resultSet(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs) throws SQLException {
 
 		printWriter.println();
-		printWriter.println("-- " + table.toSelectSql() + ";");
+		printWriter.println("-- " + table.toSelectSql(dbSupport) + ";");
 
 		ResultSetMetaData metaData = rs.getMetaData();
 

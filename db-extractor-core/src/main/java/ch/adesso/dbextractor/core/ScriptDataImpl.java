@@ -40,7 +40,7 @@ public class ScriptDataImpl implements ScriptData {
 
 			try (Connection con = inputDbSupport.getConnection();
 					Statement stmt = con.createStatement();
-					ResultSet rs = stmt.executeQuery(table.toSelectSql())) {
+					ResultSet rs = stmt.executeQuery(table.toSelectSql(inputDbSupport))) {
 
 				output.resultSet(table, foreignKeys, rs);
 			} catch (SQLException e) {
@@ -54,14 +54,13 @@ public class ScriptDataImpl implements ScriptData {
 	private List<TableDataFilter> collectData() {
 		while (!isFilterDone()) {
 			for (TableDataFilter table : new ArrayList<>(mapTables.values())) {
-				if (table.isFilterModified()) {
-					table.setFilterModified(false);
-
+				if (table.hasFilterModified()) {
 					List<ForeignKey> foreignKeys = getForeignKeys(table.getTable());
 					try (Connection con = inputDbSupport.getConnection();
 							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
+							ResultSet rs = stmt.executeQuery(table.toSelectSqlModified(inputDbSupport));) {
 
+						table.resetFilterModified();
 						while (rs.next()) {
 							handleForeignKeyConstraints(table, foreignKeys, rs);
 						}
@@ -157,7 +156,7 @@ public class ScriptDataImpl implements ScriptData {
 	boolean isFilterDone() {
 
 		for (TableDataFilter table : mapTables.values()) {
-			if (table.isFilterModified()) {
+			if (table.hasFilterModified()) {
 				return false;
 			}
 		}

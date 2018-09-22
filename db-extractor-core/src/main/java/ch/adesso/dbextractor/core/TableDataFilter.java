@@ -15,8 +15,8 @@ public class TableDataFilter {
 	private final DatabaseObject table;
 	private String orderBy;
 	private Map<String, Set<Object>> mapFilters = new LinkedHashMap<>();
+	private Map<String, Set<Object>> mapFiltersModified = new LinkedHashMap<>();
 	private Set<DatabaseObject> dependsOn = new HashSet<>();
-	private boolean filterModified;
 
 	public TableDataFilter(DatabaseObject table) {
 		this.table = table;
@@ -38,7 +38,9 @@ public class TableDataFilter {
 	public TableDataFilter addWhereSql(String sql) {
 
 		Set<Object> set = mapFilters.computeIfAbsent(null, key -> new LinkedHashSet<>());
-		filterModified = set.add(sql) || filterModified;
+		if (set.add(sql)) {
+			mapFiltersModified.computeIfAbsent(null, key -> new LinkedHashSet<>()).add(sql);
+		}
 		return this;
 	}
 
@@ -46,46 +48,54 @@ public class TableDataFilter {
 
 		Set<Object> set = mapFilters.computeIfAbsent(columnName, key -> new HashSet<>());
 		for (Object value : values) {
-			filterModified = set.add(value) || filterModified;
+			if (set.add(value)) {
+				mapFiltersModified.computeIfAbsent(columnName, key -> new LinkedHashSet<>()).add(value);
+			}
 		}
 		return this;
 	}
 
-	public String toSelectSql() {
+	public String toSelectSql(DbSupport dbSupport) {
+		return toSelectSql(dbSupport, mapFilters);
+	}
+
+	public String toSelectSqlModified(DbSupport dbSupport) {
+		return toSelectSql(dbSupport, mapFiltersModified);
+	}
+
+	private String toSelectSql(DbSupport dbSupport, Map<String, Set<Object>> mapFilters) {
+
 		StringBuilder sb = new StringBuilder();
-		sb.append("SELECT * FROM ").append(table.toString());
 
-		boolean isFirstKey = true;
-		for (Entry<String, Set<Object>> entry : mapFilters.entrySet()) {
-			sb.append(isFirstKey ? " WHERE " : " OR ");
-
-			if (entry.getKey() == null) {
-				boolean isFirstValue = true;
-				for (Object value : entry.getValue()) {
-					if (!isFirstValue) {
-						sb.append(" OR ");
+		if (!mapFilters.isEmpty()) {
+			for (Entry<String, Set<Object>> entry : mapFilters.entrySet()) {
+				if (entry.getKey() == null) {
+					for (Object value : entry.getValue()) {
+						sb.append(" OR ").append(value);
 					}
-					sb.append(value);
-					isFirstValue = false;
 				}
-			} else {
-				List<Object> sortedValues = new ArrayList<>(entry.getValue());
-				Collections.sort(sortedValues, this::naturalSortCompair);
+				else {
+					List<Object> sortedValues = new ArrayList<>(entry.getValue());
+					Collections.sort(sortedValues, this::naturalSortComparator);
 
-				sb.append(entry.getKey()).append(" IN (");
-				boolean isFirstValue = true;
-				for (Object value : sortedValues) {
-					if (!isFirstValue) {
-						sb.append(", ");
+					sb.append(" OR ").append(entry.getKey()).append(" IN (");
+					boolean isFirstValue = true;
+					for (Object value : sortedValues) {
+						if (!isFirstValue) {
+							sb.append(", ");
+						}
+						isFirstValue = false;
+
+						sb.append(dbSupport.toSqlValueString(value));
 					}
-					isFirstValue = false;
-
-					sb.append(toSqlValueString(value));
+					sb.append(")");
 				}
-				sb.append(")");
 			}
-			isFirstKey = false;
+			sb.replace(0, 4, " WHERE ");
 		}
+
+		sb.insert(0, table.toString())
+				.insert(0, "SELECT * FROM ");
 
 		if (orderBy != null) {
 			sb.append(" ORDER BY ").append(orderBy);
@@ -93,7 +103,7 @@ public class TableDataFilter {
 		return sb.toString();
 	}
 
-	private int naturalSortCompair(Object o1, Object o2) {
+	private int naturalSortComparator(Object o1, Object o2) {
 
 		if (o1 == null && o2 == null) {
 			return 0;
@@ -109,27 +119,16 @@ public class TableDataFilter {
 		return o1.getClass().getName().compareTo(o2.getClass().getName());
 	}
 
-	private String toSqlValueString(Object value) {
-		if (value == null) {
-			return "NULL";
-		} else if (value instanceof Boolean) {
-			return (boolean) value ? "1" : "0";
-		} else if (value instanceof String) {
-			return "'" + ((String) value).replace("'", "''") + "'";
-		}
-		return value.toString();
-	}
-
-	public boolean isFilterModified() {
-		return filterModified;
-	}
-
-	public void setFilterModified(boolean filterModified) {
-		this.filterModified = filterModified;
-	}
-
 	public boolean hasFilter() {
 		return !mapFilters.isEmpty();
+	}
+
+	public boolean hasFilterModified() {
+		return !mapFiltersModified.isEmpty();
+	}
+
+	public void resetFilterModified() {
+		this.mapFiltersModified.clear();
 	}
 
 	public String getOrderBy() {
@@ -144,4 +143,8 @@ public class TableDataFilter {
 		return dependsOn;
 	}
 
+	@Override
+	public String toString() {
+		return getClass().getSimpleName() + "(" + table + ")";
+	}
 }
