@@ -18,6 +18,7 @@
 
 	<modules>
 		<module>db-extractor-core</module>
+		<module>db-extractor-spring</module>
 	</modules>
 
 	<properties>
