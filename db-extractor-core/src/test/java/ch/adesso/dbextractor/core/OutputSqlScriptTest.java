@@ -21,7 +21,7 @@ public class OutputSqlScriptTest {
 	@Before
 	public void setup() {
 
-		DbSupport dbSupport = mock(DbSupport.class);
+		dbSupport = mock(DbSupport.class);
 		doAnswer(invocation -> {
 			Object value = invocation.getArgument(0);
 			if (value == null) {
