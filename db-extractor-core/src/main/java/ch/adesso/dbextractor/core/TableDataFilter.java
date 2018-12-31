@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.StringJoiner;
 
 public class TableDataFilter {
 
@@ -65,37 +66,28 @@ public class TableDataFilter {
 
 	private String toSelectSql(DbSupport dbSupport, Map<String, Set<Object>> mapFilters) {
 
-		StringBuilder sb = new StringBuilder();
-
-		if (!mapFilters.isEmpty()) {
-			for (Entry<String, Set<Object>> entry : mapFilters.entrySet()) {
-				if (entry.getKey() == null) {
-					for (Object value : entry.getValue()) {
-						sb.append(" OR ").append(value);
-					}
+		StringJoiner whereJoiner = new StringJoiner(" OR ", " WHERE ", "")
+				.setEmptyValue("");
+		for (Entry<String, Set<Object>> entry : mapFilters.entrySet()) {
+			if (entry.getKey() == null) {
+				for (Object value : entry.getValue()) {
+					whereJoiner.add((String) value);
 				}
-				else {
-					List<Object> sortedValues = new ArrayList<>(entry.getValue());
-					Collections.sort(sortedValues, this::naturalSortComparator);
+			} else {
+				List<Object> sortedValues = new ArrayList<>(entry.getValue());
+				Collections.sort(sortedValues, this::naturalSortComparator);
 
-					sb.append(" OR ").append(entry.getKey()).append(" IN (");
-					boolean isFirstValue = true;
-					for (Object value : sortedValues) {
-						if (!isFirstValue) {
-							sb.append(", ");
-						}
-						isFirstValue = false;
-
-						sb.append(dbSupport.toSqlValueString(value));
-					}
-					sb.append(")");
+				StringJoiner joiner = new StringJoiner(", ", entry.getKey() + " IN (", ")");
+				for (Object value : sortedValues) {
+					joiner.add(dbSupport.toSqlValueString(value));
 				}
+				whereJoiner.add(joiner.toString());
 			}
-			sb.replace(0, 4, " WHERE ");
 		}
 
-		sb.insert(0, table.toString())
-				.insert(0, "SELECT * FROM ");
+		StringBuilder sb = new StringBuilder();
+		sb.append("SELECT * FROM ").append(table.toString())
+				.append(whereJoiner);
 
 		if (orderBy != null) {
 			sb.append(" ORDER BY ").append(orderBy);
