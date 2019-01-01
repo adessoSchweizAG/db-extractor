@@ -6,7 +6,6 @@ import static org.junit.Assert.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.DriverManager;
@@ -129,11 +128,11 @@ public class DbSupportHsqlDbTest {
 	public void scriptData() throws SQLException {
 		
 		List<TableDataFilter> list = Collections.singletonList(new TableDataFilter("ITEM").addWhereSql("InvoiceID = 0"));
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		DataOutput output = new OutputSqlScript(dbSupport);
 		ScriptData scriptData = new ScriptDataImpl(dbSupport);
-		scriptData.script(list, new PrintStream(out));
+		scriptData.script(list, output);
 
-		String generateScript = out.toString();
+		String generateScript = output.toString();
 
 		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM CUSTOMER WHERE ID IN (0) ORDER BY ID;"));
 		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO CUSTOMER (ID, FIRSTNAME, LASTNAME, STREET, CITY) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
@@ -157,8 +156,9 @@ public class DbSupportHsqlDbTest {
 		
 		List<TableDataFilter> list = Collections.singletonList(new TableDataFilter("ITEM").addWhereSql("InvoiceID = 0"));
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		DataOutput output = new OutputSqlScript(dbSupport, out);
 		ScriptData scriptData = new ScriptDataImpl(dbSupport);
-		scriptData.script(list, new PrintStream(out));
+		scriptData.script(list, output);
 	
 		try (Connection con = DriverManager.getConnection("jdbc:hsqldb:mem:memdbTest", "SA", null);
 				Statement stmt = con.createStatement()) {

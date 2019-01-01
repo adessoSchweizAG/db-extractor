@@ -1,9 +1,7 @@
 package ch.adesso.dbextractor.core;
 
-import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.ResultSet;
-import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -18,7 +16,6 @@ import java.util.stream.Collectors;
 public class ScriptDataImpl implements ScriptData {
 
 	private final DbSupport inputDbSupport;
-	private final DbSupport outputDbSupport;
 
 	private Map<DatabaseObject, String> primaryKey;
 	private List<ForeignKey> foreignKey;
@@ -26,41 +23,44 @@ public class ScriptDataImpl implements ScriptData {
 
 	public ScriptDataImpl(DbSupport dbSupport) {
 		this.inputDbSupport = dbSupport;
-		this.outputDbSupport = dbSupport;
 	}
 
 	@Override
-	public void script(List<TableDataFilter> list, PrintStream outStream) {
+	public void script(List<TableDataFilter> filters, DataOutput output) {
 
-		outStream.println("-- Input:");
-		for (TableDataFilter table : list) {
+		for (TableDataFilter table : filters) {
 			mapTables.put(table.getTable(), table);
-			if (table.hasFilter()) {
-				outStream.println("-- " + table.toSelectSql());
-			}
 		}
-		outStream.println();
+
+		output.initialize(filters);
 
 		List<TableDataFilter> tables = collectData();
 		for (TableDataFilter table : tables) {
+			List<ForeignKey> foreignKeys = getForeignKeys(table.getTable());
 
-			outStream.println();
-			outStream.println("-- " + table.toSelectSql() + ";");
-			printInsertSql(table, outStream);
+			try (Connection con = inputDbSupport.getConnection();
+					Statement stmt = con.createStatement();
+					ResultSet rs = stmt.executeQuery(table.toSelectSql(inputDbSupport))) {
+
+				output.resultSet(table, foreignKeys, rs);
+			} catch (SQLException e) {
+				throw new IllegalStateException(e);
+			}
 		}
+
+		output.finish();
 	}
 
 	private List<TableDataFilter> collectData() {
 		while (!isFilterDone()) {
 			for (TableDataFilter table : new ArrayList<>(mapTables.values())) {
-				if (table.isFilterModified()) {
-					table.setFilterModified(false);
-
-					List<ForeignKey> foreignKeys = getForeignKey(table.getTable());
+				if (table.hasFilterModified()) {
+					List<ForeignKey> foreignKeys = getForeignKeys(table.getTable());
 					try (Connection con = inputDbSupport.getConnection();
 							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
+							ResultSet rs = stmt.executeQuery(table.toSelectSqlModified(inputDbSupport));) {
 
+						table.resetFilterModified();
 						while (rs.next()) {
 							handleForeignKeyConstraints(table, foreignKeys, rs);
 						}
@@ -120,40 +120,6 @@ public class ScriptDataImpl implements ScriptData {
 		}
 	}
 
-	void printInsertSql(TableDataFilter table, PrintStream outStream) {
-		try (Connection con = inputDbSupport.getConnection();
-				Statement stmt = con.createStatement();
-				ResultSet rs = stmt.executeQuery(table.toSelectSql());) {
-
-			ResultSetMetaData metaData = rs.getMetaData();
-
-			while (rs.next()) {
-				StringBuilder sbSqlInsert = new StringBuilder();
-				sbSqlInsert.append("INSERT INTO ").append(table.getTable().toString()).append(" (");
-
-				for (int i = 1; i <= metaData.getColumnCount(); i++) {
-					if (i > 1) {
-						sbSqlInsert.append(", ");
-					}
-					sbSqlInsert.append(metaData.getColumnName(i));
-				}
-				sbSqlInsert.append(") VALUES (");
-				for (int i = 1; i <= metaData.getColumnCount(); i++) {
-					if (i > 1) {
-						sbSqlInsert.append(", ");
-					}
-					sbSqlInsert.append(outputDbSupport.toSqlValueString(rs.getObject(i)));
-				}
-				sbSqlInsert.append(");");
-
-				outStream.println(sbSqlInsert.toString());
-			}
-
-		} catch (SQLException e) {
-			throw new IllegalStateException(e);
-		}
-	}
-
 	List<TableDataFilter> sortTables() {
 		List<TableDataFilter> tables = new ArrayList<>(mapTables.values());
 		Collections.sort(tables, new Comparator<TableDataFilter>() {
@@ -190,7 +156,7 @@ public class ScriptDataImpl implements ScriptData {
 	boolean isFilterDone() {
 
 		for (TableDataFilter table : mapTables.values()) {
-			if (table.isFilterModified()) {
+			if (table.hasFilterModified()) {
 				return false;
 			}
 		}
@@ -209,7 +175,7 @@ public class ScriptDataImpl implements ScriptData {
 		return primaryKey.get(table);
 	}
 
-	List<ForeignKey> getForeignKey(DatabaseObject table) {
+	List<ForeignKey> getForeignKeys(DatabaseObject table) {
 
 		if (foreignKey == null) {
 			foreignKey = inputDbSupport.loadForeignKey();
