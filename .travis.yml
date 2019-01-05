@@ -1,4 +1,6 @@
 language: java
+services:
+  - postgresql
 addons:
   sonarcloud:
     organization: "adesso-schweiz-ag"
