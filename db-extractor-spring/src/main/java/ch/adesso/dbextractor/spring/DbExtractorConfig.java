@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Profile;
 
 import ch.adesso.dbextractor.core.DbSupport;
 import ch.adesso.dbextractor.core.DbSupportHsqlDb;
+import ch.adesso.dbextractor.core.DbSupportPostgres;
 import ch.adesso.dbextractor.core.ScriptData;
 import ch.adesso.dbextractor.core.ScriptDataImpl;
 
@@ -15,9 +16,15 @@ import ch.adesso.dbextractor.core.ScriptDataImpl;
 public class DbExtractorConfig {
 
 	@Bean
-	@Profile(value = { "default", "hsqldb" })
+	@Profile({ "default", "hsqldb" })
 	public DbSupport dbSupportHsqlDb(DataSource dataSource) {
 		return new DbSupportHsqlDb(dataSource);
+	}
+
+	@Bean
+	@Profile("postgres")
+	public DbSupport dbSupportPostgres(DataSource dataSource) {
+		return new DbSupportPostgres(dataSource);
 	}
 
 	@Bean
