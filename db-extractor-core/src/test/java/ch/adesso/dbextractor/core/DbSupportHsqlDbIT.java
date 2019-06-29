@@ -2,7 +2,9 @@ package ch.adesso.dbextractor.core;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -21,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -29,6 +32,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -72,12 +76,27 @@ public class DbSupportHsqlDbIT {
 	
 	@Test
 	public void loadPrimaryKey() {
-		dbSupport.loadPrimaryKey();
+		Map<DatabaseObject, String> loadPrimaryKey = dbSupport.loadPrimaryKey();
+		assertNotNull(loadPrimaryKey);
+		assertThat(loadPrimaryKey, Matchers.hasEntry(new DatabaseObject("customer"), "ID"));
 	}
 	
 	@Test
 	public void loadForeignKey() {
-		dbSupport.loadForeignKey();
+		List<ForeignKey> loadForeignKey = dbSupport.loadForeignKey();
+		assertNotNull(loadForeignKey);
+
+		DatabaseObject customer = new DatabaseObject("customer");
+		DatabaseObject invoice = new DatabaseObject("invoice");
+		
+		for (ForeignKey foreignKey : loadForeignKey) {
+			if (invoice.equals(foreignKey.getFkTable()) && foreignKey.getFkColumnNames().contains("CUSTOMERID")) {
+				assertEquals(customer, foreignKey.getPkTable());
+				assertThat(foreignKey.getPkColumnNames(), CoreMatchers.hasItem("ID"));
+				return;
+			}
+		}
+		fail();
 	}
 	
 	@Test
