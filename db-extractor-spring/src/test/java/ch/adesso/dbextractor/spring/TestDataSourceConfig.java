@@ -1,6 +1,5 @@
 package ch.adesso.dbextractor.spring;
 
-import javax.annotation.PreDestroy;
 import javax.sql.DataSource;
 
 import org.springframework.context.annotation.Bean;
@@ -14,7 +13,7 @@ public class TestDataSourceConfig {
 
 	private EmbeddedDatabase database;
 
-	@Bean
+	@Bean(destroyMethod = "shutdown")
 	public DataSource dataSource() {
 		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder()
 				.setType(EmbeddedDatabaseType.HSQL)
@@ -23,12 +22,4 @@ public class TestDataSourceConfig {
 		this.database = builder.build();
 		return this.database;
 	}
-
-	@PreDestroy
-	public void close() {
-		if (this.database != null) {
-			this.database.shutdown();
-		}
-	}
-
 }
