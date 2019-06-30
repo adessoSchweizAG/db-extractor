@@ -1,7 +1,10 @@
 package ch.adesso.dbextractor.core;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -28,11 +32,12 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-public class DbSupportHsqlDbTest {
+public class DbSupportHsqlDbIT {
 
 	private DataSource dataSource;
 	private DbSupport dbSupport;
@@ -44,8 +49,8 @@ public class DbSupportHsqlDbTest {
 		dataSource = BasicDataSourceFactory.createDataSource(properties);
 		
 		try (Connection con = dataSource.getConnection()) {
-			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.create.sql"));
-			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.data.sql"));
+			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.create.sql"));
+			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.data.sql"));
 		}
 
 		dbSupport = new DbSupportHsqlDb(dataSource);
@@ -71,12 +76,27 @@ public class DbSupportHsqlDbTest {
 	
 	@Test
 	public void loadPrimaryKey() {
-		dbSupport.loadPrimaryKey();
+		Map<DatabaseObject, String> loadPrimaryKey = dbSupport.loadPrimaryKey();
+		assertNotNull(loadPrimaryKey);
+		assertThat(loadPrimaryKey, Matchers.hasEntry(new DatabaseObject("customer"), "ID"));
 	}
 	
 	@Test
 	public void loadForeignKey() {
-		dbSupport.loadForeignKey();
+		List<ForeignKey> loadForeignKey = dbSupport.loadForeignKey();
+		assertNotNull(loadForeignKey);
+
+		DatabaseObject customer = new DatabaseObject("customer");
+		DatabaseObject invoice = new DatabaseObject("invoice");
+		
+		for (ForeignKey foreignKey : loadForeignKey) {
+			if (invoice.equals(foreignKey.getFkTable()) && foreignKey.getFkColumnNames().contains("CUSTOMERID")) {
+				assertEquals(customer, foreignKey.getPkTable());
+				assertThat(foreignKey.getPkColumnNames(), CoreMatchers.hasItem("ID"));
+				return;
+			}
+		}
+		fail();
 	}
 	
 	@Test
@@ -95,6 +115,8 @@ public class DbSupportHsqlDbTest {
 		toSqlValueString(stmt -> stmt.setTimestamp(1, new Timestamp(df.parse("2018-07-25T18:28:38.000").getTime())), "SQL_TIMESTAMP");
 		toSqlValueString(stmt -> stmt.setDate(1, new Date(df.parse("2018-07-25T00:00:00.000").getTime())), "SQL_DATE");
 		toSqlValueString(stmt -> stmt.setTime(1, new Time(df.parse("1970-01-01T18:28:38.000").getTime())), "SQL_TIME");
+
+		toSqlValueString(stmt -> stmt.setBytes(1, new byte[] { (byte) 0xCA, (byte) 0xFE }), "SQL_VARBINARY");
 	}
 
 	@FunctionalInterface
@@ -117,7 +139,12 @@ public class DbSupportHsqlDbTest {
 
 					ResultSet rs = stmt.executeQuery("SELECT " + dbSupport.toSqlValueString(value) + " AS VALUE FROM INFORMATION_SCHEMA.INFORMATION_SCHEMA_CATALOG_NAME");
 					while (rs.next()) {
-						assertEquals(value, rs.getObject(1));
+						if (value instanceof byte[]) {
+							assertArrayEquals((byte[]) value, (byte[]) rs.getObject(1));
+						}
+						else {
+							assertEquals(value, rs.getObject(1));
+						}
 					}
 				}
 			}
@@ -163,7 +190,7 @@ public class DbSupportHsqlDbTest {
 		try (Connection con = DriverManager.getConnection("jdbc:hsqldb:mem:memdbTest", "SA", null);
 				Statement stmt = con.createStatement()) {
 
-			runSqlScript(con, DbSupportHsqlDbTest.class.getResourceAsStream("DbSupportHsqlDbTest.create.sql"));
+			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.create.sql"));
 			runSqlScript(con, new ByteArrayInputStream(out.toByteArray()));
 			stmt.executeUpdate("SHUTDOWN");
 		}
