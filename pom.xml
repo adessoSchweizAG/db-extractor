@@ -97,7 +97,6 @@
 						</execution>
 						<execution>
 							<id>post-integration-test</id>
-							<phase>integration-test</phase>
 							<goals>
 								<goal>report-integration</goal>
 							</goals>
