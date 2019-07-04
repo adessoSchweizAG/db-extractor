@@ -77,7 +77,7 @@ public class DbSupportPostgresIT {
 	public void loadPrimaryKey() {
 		Map<DatabaseObject, String> loadPrimaryKey = dbSupport.loadPrimaryKey();
 		assertNotNull(loadPrimaryKey);
-		assertThat(loadPrimaryKey, Matchers.hasEntry(new DatabaseObject("customer"), "ID"));
+		assertThat(loadPrimaryKey, Matchers.hasEntry(new DatabaseObject("customer"), "id"));
 	}
 
 	@Test
@@ -89,9 +89,9 @@ public class DbSupportPostgresIT {
 		DatabaseObject invoice = new DatabaseObject("invoice");
 
 		for (ForeignKey foreignKey : loadForeignKey) {
-			if (invoice.equals(foreignKey.getFkTable()) && foreignKey.getFkColumnNames().contains("CUSTOMERID")) {
+			if (invoice.equals(foreignKey.getFkTable()) && foreignKey.getFkColumnNames().contains("customerid")) {
 				assertEquals(customer, foreignKey.getPkTable());
-				assertThat(foreignKey.getPkColumnNames(), CoreMatchers.hasItem("ID"));
+				assertThat(foreignKey.getPkColumnNames(), CoreMatchers.hasItem("id"));
 				return;
 			}
 		}
