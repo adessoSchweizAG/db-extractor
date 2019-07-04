@@ -1,8 +1,11 @@
 package ch.adesso.dbextractor.core;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +23,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Scanner;
 import java.util.regex.Pattern;
@@ -28,6 +32,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.hamcrest.CoreMatchers;
+import org.hamcrest.Matchers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -70,12 +75,27 @@ public class DbSupportPostgresIT {
 
 	@Test
 	public void loadPrimaryKey() {
-		dbSupport.loadPrimaryKey();
+		Map<DatabaseObject, String> loadPrimaryKey = dbSupport.loadPrimaryKey();
+		assertNotNull(loadPrimaryKey);
+		assertThat(loadPrimaryKey, Matchers.hasEntry(new DatabaseObject("customer"), "ID"));
 	}
 
 	@Test
 	public void loadForeignKey() {
-		dbSupport.loadForeignKey();
+		List<ForeignKey> loadForeignKey = dbSupport.loadForeignKey();
+		assertNotNull(loadForeignKey);
+
+		DatabaseObject customer = new DatabaseObject("customer");
+		DatabaseObject invoice = new DatabaseObject("invoice");
+
+		for (ForeignKey foreignKey : loadForeignKey) {
+			if (invoice.equals(foreignKey.getFkTable()) && foreignKey.getFkColumnNames().contains("CUSTOMERID")) {
+				assertEquals(customer, foreignKey.getPkTable());
+				assertThat(foreignKey.getPkColumnNames(), CoreMatchers.hasItem("ID"));
+				return;
+			}
+		}
+		fail();
 	}
 
 	@Test
@@ -139,24 +159,21 @@ public class DbSupportPostgresIT {
 
 		String generateScript = output.toString();
 
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM customer WHERE id IN (0) ORDER BY id;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO customer (id, firstname, lastname, street, city) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
+		assertThat(generateScript, containsString("-- SELECT * FROM customer WHERE id IN (0) ORDER BY id;"));
+		assertThat(generateScript, containsString("INSERT INTO customer (id, firstname, lastname, street, city) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
 
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM product WHERE id IN (7, 14, 47) ORDER BY id;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO product (id, name, price) VALUES (7, 'Telephone Shoe', 84);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO product (id, name, price) VALUES (14, 'Telephone Iron', 124);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO product (id, name, price) VALUES (47, 'Ice Tea Iron', 178);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM product WHERE id IN (7, 14, 47) ORDER BY id;"));
+		assertThat(generateScript, containsString("INSERT INTO product (id, name, price) VALUES (7, 'Telephone Shoe', 84);"));
+		assertThat(generateScript, containsString("INSERT INTO product (id, name, price) VALUES (14, 'Telephone Iron', 124);"));
+		assertThat(generateScript, containsString("INSERT INTO product (id, name, price) VALUES (47, 'Ice Tea Iron', 178);"));
 
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM invoice WHERE id IN (0) ORDER BY id;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO invoice (id, customerid, total) VALUES (0, 0, 5847.0);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM invoice WHERE id IN (0) ORDER BY id;"));
+		assertThat(generateScript, containsString("INSERT INTO invoice (id, customerid, total) VALUES (0, 0, 5847.0);"));
 
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM item WHERE InvoiceID = 0 ORDER BY id;"));
-		assertThat(generateScript,
-				CoreMatchers.containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (0, 0, 2, 47, 3, 267.0);"));
-		assertThat(generateScript,
-				CoreMatchers.containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (1, 0, 1, 14, 19, 186.0);"));
-		assertThat(generateScript,
-				CoreMatchers.containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (2, 0, 0, 7, 12, 126.0);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM item WHERE InvoiceID = 0 ORDER BY id;"));
+		assertThat(generateScript, containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (0, 0, 2, 47, 3, 267.0);"));
+		assertThat(generateScript, containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (1, 0, 1, 14, 19, 186.0);"));
+		assertThat(generateScript, containsString("INSERT INTO item (id, invoiceid, item, productid, quantity, cost) VALUES (2, 0, 0, 7, 12, 126.0);"));
 	}
 
 	@Test
@@ -173,21 +190,24 @@ public class DbSupportPostgresIT {
 
 			runSqlScript(con, DbSupportPostgresIT.class.getResourceAsStream("DbSupportPostgresIT.drop.sql"));
 			runSqlScript(con, DbSupportPostgresIT.class.getResourceAsStream("DbSupportPostgresIT.create.sql"));
-			runSqlScript(con, new ByteArrayInputStream(out.toByteArray()));
+			assertEquals(8, runSqlScript(con, new ByteArrayInputStream(out.toByteArray())));
 		}
 	}
 
-	private static void runSqlScript(Connection con, InputStream stream) throws SQLException {
+	private static int runSqlScript(Connection con, InputStream stream) throws SQLException {
 
 		Pattern pattern = Pattern.compile("(?:;(?:\\r|\\n)+)|(?:--.*(?:\\r|\\n)+)");
 		try (Statement stmt = con.createStatement()) {
+
+			int affectedRowCount = 0;
 			for (Scanner s = new Scanner(stream).useDelimiter(pattern); s.hasNext();) {
 
 				String sql = s.next().trim();
 				if (sql.length() > 0) {
-					stmt.executeUpdate(sql);
+					affectedRowCount += stmt.executeUpdate(sql);
 				}
 			}
+			return affectedRowCount;
 		}
 	}
 }

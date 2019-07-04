@@ -1,5 +1,6 @@
 package ch.adesso.dbextractor.core;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -161,21 +162,21 @@ public class DbSupportHsqlDbIT {
 
 		String generateScript = output.toString();
 
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM CUSTOMER WHERE ID IN (0) ORDER BY ID;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO CUSTOMER (ID, FIRSTNAME, LASTNAME, STREET, CITY) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
+		assertThat(generateScript, containsString("-- SELECT * FROM CUSTOMER WHERE ID IN (0) ORDER BY ID;"));
+		assertThat(generateScript, containsString("INSERT INTO CUSTOMER (ID, FIRSTNAME, LASTNAME, STREET, CITY) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
 		
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM PRODUCT WHERE ID IN (7, 14, 47) ORDER BY ID;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (7, 'Telephone Shoe', 84);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (14, 'Telephone Iron', 124);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (47, 'Ice Tea Iron', 178);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM PRODUCT WHERE ID IN (7, 14, 47) ORDER BY ID;"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (7, 'Telephone Shoe', 84);"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (14, 'Telephone Iron', 124);"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (47, 'Ice Tea Iron', 178);"));
 		
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM INVOICE WHERE ID IN (0) ORDER BY ID;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO INVOICE (ID, CUSTOMERID, TOTAL) VALUES (0, 0, 3898);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM INVOICE WHERE ID IN (0) ORDER BY ID;"));
+		assertThat(generateScript, containsString("INSERT INTO INVOICE (ID, CUSTOMERID, TOTAL) VALUES (0, 0, 3898);"));
 		
-		assertThat(generateScript, CoreMatchers.containsString("-- SELECT * FROM ITEM WHERE InvoiceID = 0 ORDER BY ID;"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (0, 0, 2, 47, 3, 178);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (1, 0, 1, 14, 19, 124);"));
-		assertThat(generateScript, CoreMatchers.containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (2, 0, 0, 7, 12, 84);"));
+		assertThat(generateScript, containsString("-- SELECT * FROM ITEM WHERE InvoiceID = 0 ORDER BY ID;"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (0, 0, 2, 47, 3, 178);"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (1, 0, 1, 14, 19, 124);"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (2, 0, 0, 7, 12, 84);"));
 	}
 
 	@Test
@@ -191,22 +192,25 @@ public class DbSupportHsqlDbIT {
 				Statement stmt = con.createStatement()) {
 
 			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.create.sql"));
-			runSqlScript(con, new ByteArrayInputStream(out.toByteArray()));
+			assertEquals(8, runSqlScript(con, new ByteArrayInputStream(out.toByteArray())));
 			stmt.executeUpdate("SHUTDOWN");
 		}
 	}
 
-	private static void runSqlScript(Connection con, InputStream stream) throws SQLException {
+	private static int runSqlScript(Connection con, InputStream stream) throws SQLException {
 
 		Pattern pattern = Pattern.compile("(?:;(?:\\r|\\n)+)|(?:--.*(?:\\r|\\n)+)");
 		try (Statement stmt = con.createStatement()) {
+
+			int affectedRowCount = 0;
 			for (Scanner s = new Scanner(stream).useDelimiter(pattern); s.hasNext();) {
 
 				String sql = s.next().trim();
 				if (sql.length() > 0) {
-					stmt.executeUpdate(sql);
+					affectedRowCount += stmt.executeUpdate(sql);
 				}
 			}
+			return affectedRowCount;
 		}
 	}
 }
