@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 
 	private static final String SQL_SELECT_PRIMARY_KEY = "SELECT CURRENT_CATALOG AS CURRENT_CATALOG, CURRENT_SCHEMA AS CURRENT_SCHEMA, \r\n"
@@ -29,6 +31,17 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 			+ "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE         a ON a.CONSTRAINT_CATALOG = r.UNIQUE_CONSTRAINT_CATALOG AND a.CONSTRAINT_SCHEMA = r.UNIQUE_CONSTRAINT_SCHEMA AND a.CONSTRAINT_NAME = r.UNIQUE_CONSTRAINT_NAME AND a.ORDINAL_POSITION = fc.POSITION_IN_UNIQUE_CONSTRAINT \r\n"
 			+ "WHERE c.CONSTRAINT_TYPE = 'FOREIGN KEY' \r\n"
 			+ "ORDER BY c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, fc.POSITION_IN_UNIQUE_CONSTRAINT";
+
+	private DataSource dataSource;
+
+	protected AbstractDbSupportSql92(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
 
 	@Override
 	public Map<DatabaseObject, String> loadPrimaryKey() {
