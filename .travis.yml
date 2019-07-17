@@ -1,4 +1,6 @@
 language: java
+services:
+  - postgresql
 addons:
   sonarcloud:
     organization: "adesso-schweiz-ag"
@@ -8,6 +10,9 @@ cache:
   directories:
     - $HOME/.m2/repository
 install: true
+before_script:
+  - git config remote.origin.fetch "+refs/heads/master:refs/remotes/origin/master"
+  - git fetch
 script:
   - mvn clean verify sonar:sonar
 before_deploy:

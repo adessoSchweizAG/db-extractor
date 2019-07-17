@@ -2,20 +2,20 @@ package ch.adesso.dbextractor.core;
 
 import javax.sql.DataSource;
 
-public class DbSupportHsqlDb extends AbstractDbSupportSql92 implements DbSupport {
+public class DbSupportPostgres extends AbstractDbSupportSql92 implements DbSupport {
 
-	public DbSupportHsqlDb(DataSource dataSource) {
+	public DbSupportPostgres(DataSource dataSource) {
 		super(dataSource);
 	}
 
 	@Override
 	protected String toSqlValueString(byte[] value) {
-		StringBuilder sb = new StringBuilder(value.length * 2 + 12);
-		sb.append("HEXTORAW('");
+		StringBuilder sb = new StringBuilder(value.length * 2 + 17);
+		sb.append("DECODE('");
 		for (byte b : value) {
 			sb.append(String.format("%02x", b));
 		}
-		sb.append("')");
+		sb.append("', 'hex')");
 		return sb.toString();
 	}
 

@@ -50,5 +50,11 @@
 			<version>2.4.1</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>42.2.5</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

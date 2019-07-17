@@ -9,16 +9,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 
-	private static final String SQL_SELECT_PRIMARY_KEY = "SELECT c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
+	private static final String SQL_SELECT_PRIMARY_KEY = "SELECT CURRENT_CATALOG AS CURRENT_CATALOG, CURRENT_SCHEMA AS CURRENT_SCHEMA, \r\n"
+			+ "  c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
 			+ "  a.TABLE_CATALOG, a.TABLE_SCHEMA, a.TABLE_NAME, a.COLUMN_NAME, a.ORDINAL_POSITION \r\n"
 			+ "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS  c \r\n"
 			+ "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE  a ON a.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND a.CONSTRAINT_SCHEMA = c.CONSTRAINT_SCHEMA AND a.CONSTRAINT_NAME = c.CONSTRAINT_NAME \r\n"
 			+ "WHERE c.CONSTRAINT_TYPE = 'PRIMARY KEY' \r\n"
 			+ "ORDER BY c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, a.ORDINAL_POSITION";
 
-	private static final String SQL_SELECT_FOREIGN_KEY = "SELECT c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
+	private static final String SQL_SELECT_FOREIGN_KEY = "SELECT CURRENT_CATALOG AS CURRENT_CATALOG, CURRENT_SCHEMA AS CURRENT_SCHEMA, \r\n"
+			+ "  c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
 			+ "  fc.TABLE_CATALOG AS FK_TABLE_CATALOG, fc.TABLE_SCHEMA AS FK_TABLE_SCHEMA, fc.TABLE_NAME AS FK_TABLE_NAME, fc.COLUMN_NAME AS FK_COLUMN_NAME, \r\n"
 			+ "  a.TABLE_CATALOG AS PK_TABLE_CATALOG, a.TABLE_SCHEMA AS PK_TABLE_SCHEMA, a.TABLE_NAME AS PK_TABLE_NAME, a.COLUMN_NAME AS PK_COLUMN_NAME \r\n"
 			+ "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                c \r\n"
@@ -28,6 +32,17 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 			+ "WHERE c.CONSTRAINT_TYPE = 'FOREIGN KEY' \r\n"
 			+ "ORDER BY c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, fc.POSITION_IN_UNIQUE_CONSTRAINT";
 
+	private DataSource dataSource;
+
+	protected AbstractDbSupportSql92(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	@Override
+	public Connection getConnection() throws SQLException {
+		return dataSource.getConnection();
+	}
+
 	@Override
 	public Map<DatabaseObject, String> loadPrimaryKey() {
 		try (Connection con = getConnection();
@@ -36,8 +51,7 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 
 			Map<DatabaseObject, String> result = new HashMap<>();
 			while (rs.next()) {
-				DatabaseObject table = databaseObject(
-						rs.getString("TABLE_CATALOG"), rs.getString("TABLE_SCHEMA"), rs.getString("TABLE_NAME"));
+				DatabaseObject table = databaseObject(rs, "TABLE");
 				String columnName = rs.getString("COLUMN_NAME");
 
 				result.merge(table, columnName,
@@ -57,12 +71,9 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 
 			Map<DatabaseObject, ForeignKey> mapForeignKey = new HashMap<>();
 			while (rs.next()) {
-				DatabaseObject constraint = databaseObject(
-						rs.getString("CONSTRAINT_CATALOG"), rs.getString("CONSTRAINT_SCHEMA"), rs.getString("CONSTRAINT_NAME"));
-				DatabaseObject fkTable = databaseObject(
-						rs.getString("FK_TABLE_CATALOG"), rs.getString("FK_TABLE_SCHEMA"), rs.getString("FK_TABLE_NAME"));
-				DatabaseObject pkTable = databaseObject(
-						rs.getString("PK_TABLE_CATALOG"), rs.getString("PK_TABLE_SCHEMA"), rs.getString("PK_TABLE_NAME"));
+				DatabaseObject constraint = databaseObject(rs, "CONSTRAINT");
+				DatabaseObject fkTable = databaseObject(rs, "FK_TABLE");
+				DatabaseObject pkTable = databaseObject(rs, "PK_TABLE");
 
 				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint,
 						k -> new ForeignKey(constraint, fkTable, pkTable));
@@ -76,11 +87,19 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 		}
 	}
 
-	private DatabaseObject databaseObject(String catalog, String schema, String name) {
-		return new DatabaseObject(
-				"PUBLIC".equalsIgnoreCase(catalog) ? null : catalog,
-				"PUBLIC".equalsIgnoreCase(schema) ? null : schema,
-				name);
+	private DatabaseObject databaseObject(ResultSet rs, String prefix) throws SQLException {
+
+		String catalog = nullIf(rs.getString("CURRENT_CATALOG"), rs.getString(prefix + "_CATALOG"));
+		String schema = nullIf(rs.getString("CURRENT_SCHEMA"), rs.getString(prefix + "_SCHEMA"));
+		String name = rs.getString(prefix + "_NAME");
+		return new DatabaseObject(catalog, schema, name);
+	}
+
+	private String nullIf(String current, String value) {
+		if (current != null && current.equalsIgnoreCase(value)) {
+			return null;
+		}
+		return value;
 	}
 
 }
