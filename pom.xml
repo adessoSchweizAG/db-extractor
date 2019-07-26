@@ -136,11 +136,17 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>1.7.26</version>
+			</dependency>
+			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-dbcp2</artifactId>
 				<version>2.5.0</version>
 			</dependency>
 
+			<!--  Test only -->
 			<dependency>
 				<groupId>junit</groupId>
 				<artifactId>junit</artifactId>
