@@ -10,6 +10,7 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.dbcp2.BasicDataSource;
@@ -45,29 +46,26 @@ public class Main {
 
 	public static void main(String[] args) {
 
-		// create the parser
-		CommandLineParser parser = new DefaultParser();
+		Options options = new Options();
+		options.addOption(OPT_HELP);
+		
+		options.addRequiredOption(OPT_DRIVER, null, true, "Database driver classname");
+		options.addRequiredOption(OPT_URL, null, true, "Database JDBC URL");
+		options.addRequiredOption(OPT_USERNAME, null, true, "Database username");
+		options.addOption(OPT_PASSWORD, true, "Database password");
+		
+		options.addOption(Option.builder(OPT_TABLE_FILTER).numberOfArgs(2).valueSeparator().argName("table=\\\"where-condition\\\"")
+				.desc("Table where condition -F<table>=\\\"<where-condition>\\\"").build());
+		options.addOption(Option.builder(OPT_TABLE_ORDER).numberOfArgs(2).valueSeparator().argName("table=\\\"order-condition\\\"")
+				.desc("Table order by condition -O<table>=\\\"<order-condition>\\\"").build());
+		
 		try {
-			Options options = new Options();
-			options.addOption(OPT_HELP);
-			
-			options.addOption(OPT_DRIVER, true, "Database driver classname");
-			options.addOption(OPT_URL, true, "Database JDBC URL");
-			options.addOption(OPT_USERNAME, true, "Database username");
-			options.addOption(OPT_PASSWORD, true, "Database password");
-			
-			options.addOption(Option.builder(OPT_TABLE_FILTER).numberOfArgs(2).valueSeparator().argName("table=\\\"where-condition\\\"")
-					.desc("Table where condition -F<table>=\\\"<where-condition>\\\"").build());
-			options.addOption(Option.builder(OPT_TABLE_ORDER).numberOfArgs(2).valueSeparator().argName("table=\\\"order-condition\\\"")
-					.desc("Table order by condition -O<table>=\\\"<order-condition>\\\"").build());
-			
 			// parse the command line arguments
+			CommandLineParser parser = new DefaultParser();
 			CommandLine line = parser.parse(options, args);
 
 			if (args.length == 0 || line.hasOption(OPT_HELP.getOpt())) {
-				HelpFormatter formatter = new HelpFormatter();
-				String cmdLineSyntax = "dbExtractor -driver org.hsqldb.jdbcDriver -url jdbc:hsqldb:mem:memdb -username SA -Fitem=\"1=0\" -Oitem=\"ID DESC\"";
-				formatter.printHelp(cmdLineSyntax, options);
+				printHelp(options);
 			}
 			else {
 				BasicDataSource dataSource = createDataSource(line);
@@ -77,10 +75,18 @@ public class Main {
 				Collection<TableDataFilter> tableDataFilters = createTableDataFilters(line);
 				scriptData.script(tableDataFilters, new OutputSqlScript(dbSupport, System.out));
 			}
-
+		} catch (MissingOptionException e) {
+			printHelp(options);
 		} catch (Exception exp) {
 			LOGGER.error("Parsing failed. Reason: {}: {}", exp.getClass().getName(), exp.getMessage(), exp);
 		}
+	}
+
+	private static void printHelp(Options options) {
+		HelpFormatter formatter = new HelpFormatter();
+		formatter.setOptionComparator(null);
+		String cmdLineSyntax = "dbExtractor -driver org.hsqldb.jdbc.JDBCDriver -url jdbc:hsqldb:mem:memdb -username SA -FItem=\"1=0\" -OItem=\"ID DESC\"";
+		formatter.printHelp(cmdLineSyntax, options);
 	}
 
 	private static BasicDataSource createDataSource(CommandLine line) throws Exception {
