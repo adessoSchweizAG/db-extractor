@@ -54,13 +54,13 @@ public class DbSupportHsqlDbIT {
 			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.data.sql"));
 		}
 
-		dbSupport = new DbSupportHsqlDb(dataSource);
+		dbSupport = DbSupportFactory.createInstance(DbSupportHsqlDb.DRIVER_CLASS_NAME, dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {
 
 		Properties properties = new Properties();
-		properties.setProperty("driverClassName", "org.hsqldb.jdbcDriver");
+		properties.setProperty("driverClassName", DbSupportHsqlDb.DRIVER_CLASS_NAME);
 		properties.setProperty("url", url);
 		properties.setProperty("username", "SA");
 		return properties;

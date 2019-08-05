@@ -53,13 +53,13 @@ public class DbSupportPostgresIT {
 			runSqlScript(con, DbSupportPostgresIT.class.getResourceAsStream("DbSupportPostgresIT.data.sql"));
 		}
 
-		dbSupport = new DbSupportPostgres(dataSource);
+		dbSupport = DbSupportFactory.createInstance(DbSupportPostgres.DRIVER_CLASS_NAME, dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {
 
 		Properties properties = new Properties();
-		properties.setProperty("driverClassName", "org.postgresql.Driver");
+		properties.setProperty("driverClassName", DbSupportPostgres.DRIVER_CLASS_NAME);
 		properties.setProperty("url", url);
 		properties.setProperty("username", "postgres");
 		properties.setProperty("password", "postgres");

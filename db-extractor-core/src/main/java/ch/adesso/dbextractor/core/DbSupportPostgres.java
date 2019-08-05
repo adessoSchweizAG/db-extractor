@@ -4,6 +4,8 @@ import javax.sql.DataSource;
 
 public class DbSupportPostgres extends AbstractDbSupportSql92 implements DbSupport {
 
+	public static final String DRIVER_CLASS_NAME = "org.postgresql.Driver";
+
 	public DbSupportPostgres(DataSource dataSource) {
 		super(dataSource);
 	}
