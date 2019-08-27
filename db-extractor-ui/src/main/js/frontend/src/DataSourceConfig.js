@@ -1,6 +1,8 @@
 import React from 'react';
 import './DataSourceConfig.css';
 
+import DbExtractorRestClient from './DbExtractorRestClient';
+
 class DataSourceConfig extends React.Component {
 	
 	constructor(props) {
@@ -11,11 +13,7 @@ class DataSourceConfig extends React.Component {
 	}
 	
 	componentDidMount() {
-		fetch('/rest/driverClassNames', {
-			headers: { "Accept": "application/json", "Content-Type": "application/json" },
-			method: 'GET'
-		})
-		.then(response => response.json())
+		DbExtractorRestClient.fetchDriverClassNames()
 		.then(data => {
 			this.setState({ driverClassNames: data });
 		})
@@ -30,20 +28,14 @@ class DataSourceConfig extends React.Component {
 	
 	handleTestConnection() {
 		this.setState({ testResult: { style: { color: 'black' }, message: "testing ..." }});
-		fetch('/rest/dataSourceConfig/dummy/test', {
-			headers: { "Accept": "application/json", "Content-Type": "application/json" },
-			method: 'POST',
-			body: JSON.stringify(this.state)
-		})
-		.then(response => response.json())
+		DbExtractorRestClient.dataSourceConfigTest(this.state)
 		.then(data => {
 			if (data.success === true) {
-				this.setState({ testResult: { style: { color: 'green' }, message: "success" }});
+				return { testResult: { style: { color: 'green' }, message: "success" }};
 			}
-			else {
-				this.setState({ testResult: { style: { color: 'red' }, message: data.message }})
-			}
+			return { testResult: { style: { color: 'red' }, message: data.message }};
 		})
+		.then(state => this.setState(state))
 		.catch(console.log);
 	}
 	
