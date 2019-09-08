@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, Form } from 'react-bootstrap';
 import './DataSourceConfig.css';
 
 import DbExtractorRestClient from './DbExtractorRestClient';
@@ -21,14 +22,45 @@ class DataSourceConfig extends React.Component {
 	}
 	
 	handleChange({ target }) {
-		const name = target.name;
+		const name = target.name === "" ? target.id : target.name;
 		const value = target.type === 'checkbox' ? target.checked : target.value;
-		this.setState({ [name]: value });
+		// console.log("handleChange: " + name + ": " + value);
+		
+		if (name === "driverClassName") {
+			let urlPrefix = "";
+			let url = "";
+			if (value === "org.hsqldb.jdbc.JDBCDriver" || value === "org.hsqldb.jdbcDriver") {
+				urlPrefix = "jdbc:hsqldb:";
+				url = "jdbc:hsqldb:mem:memdb";
+			}
+			else if (value === "org.postgresql.Driver") {
+				urlPrefix = "jdbc:postgresql:";
+				url = "jdbc:postgresql:";
+			}
+			else {
+				urlPrefix = "jdbc:";
+				url = "jdbc:<driver>:";
+			}
+			
+			this.setState((state, props) => {
+				if (typeof state.url === "string" && state.url.indexOf(urlPrefix) === 0) {
+					return { driverClassName: value };
+				}
+				return { driverClassName: value, url };
+			});
+		} else {
+			this.setState({ [name]: value });
+		}
 	}
 	
 	handleTestConnection() {
+		
+		const dataSourceConfig = ({ id, name, driverClassName, url, username, password }) => {
+			return { id, name, driverClassName, url, username, password };
+		};
+		
 		this.setState({ testResult: { style: { color: 'black' }, message: "testing ..." }});
-		DbExtractorRestClient.dataSourceConfigTest(this.state)
+		DbExtractorRestClient.dataSourceConfigTest(dataSourceConfig(this.state))
 		.then(data => {
 			if (data.success === true) {
 				return { testResult: { style: { color: 'green' }, message: "success" }};
@@ -61,22 +93,31 @@ function DataSourceConfigView({ driverClassNames = [],
 	return (
 		<div className="dataSourceConfig">
 			<h3>Datasource Configuration</h3>
-			<label>Driver Class Name
-				<select name="driverClassName" value={driverClassName} onChange={handleChange} >
-					<option key="blank" />
-					{optionDriverClassNames}
-				</select>
-			</label>
-			<label>Url
-				<input name="url" value={url} onChange={handleChange} />
-			</label>
-			<label>Username
-				<input name="username" value={username} onChange={handleChange} />
-			</label>
-			<label>Password
-				<input name="password" value={password} type="password" onChange={handleChange} />
-			</label>
-			<button onClick={handleTestConnection}>test</button>
+			<Form>
+				<Form.Group controlId="driverClassName">
+					<Form.Label>Driver Class Name</Form.Label>
+					<Form.Control as="select" value={driverClassName} onChange={handleChange} >
+						<option key="blank" />
+						{optionDriverClassNames}
+					</Form.Control>
+				</Form.Group>
+				
+				<Form.Group controlId="url">
+					<Form.Label>Url</Form.Label>
+					<Form.Control value={url} onChange={handleChange} />
+				</Form.Group>
+				
+				<Form.Group controlId="username">
+					<Form.Label>Username</Form.Label>
+					<Form.Control value={username} onChange={handleChange} />
+				</Form.Group>
+				
+				<Form.Group controlId="password">
+					<Form.Label>Password</Form.Label>
+					<Form.Control value={password} type="password" onChange={handleChange} />
+				</Form.Group>
+			</Form>
+			<Button onClick={handleTestConnection}>test</Button>
 			<p style={testResult.style}>{testResult.message}</p>
 		</div>);
 }
