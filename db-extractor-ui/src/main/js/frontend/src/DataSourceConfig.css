@@ -1,15 +1,3 @@
 .dataSourceConfig {
 	width: 400px;
 }
-
-.dataSourceConfig label {
-	display: block;
-	margin-bottom: 5px;
-}
-
-.dataSourceConfig label input,
-.dataSourceConfig label select {
-	position: absolute;
-	left: 180px;
-	width: 200px;
-}
