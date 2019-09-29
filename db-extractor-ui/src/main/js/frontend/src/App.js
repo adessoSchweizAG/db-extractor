@@ -1,5 +1,5 @@
 import React from 'react';
-import { Navbar } from 'react-bootstrap';
+import { Navbar, Container, Row, Col, Accordion, Card } from 'react-bootstrap';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -10,7 +10,28 @@ function App() {
 		<Navbar bg="dark" variant="dark">
 			<Navbar.Brand>DB Extractor - React UI</Navbar.Brand>
 		</Navbar>
-		<DataSourceConfig />
+		<Container fluid="true">
+			<Row>
+				<Col as="nav" className="sidebar bg-light" md="2">
+					<div className="sidebar-sticky">
+						<Accordion defaultActiveKey="datasourceConfig">
+							<Card>
+								<Accordion.Toggle as={Card.Header} eventKey="datasourceConfig">
+									Datasource
+								</Accordion.Toggle>
+								<Accordion.Collapse eventKey="datasourceConfig">
+									<Card.Body>
+										<DataSourceConfig />
+									</Card.Body>
+								</Accordion.Collapse>
+							</Card>
+						</Accordion>
+					</div>
+				</Col>
+				<Col md="10"></Col>
+			</Row>
+		</Container>
+		
 	</React.Fragment>;
 }
 
