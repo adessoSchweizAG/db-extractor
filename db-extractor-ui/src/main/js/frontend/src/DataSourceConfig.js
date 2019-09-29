@@ -1,6 +1,5 @@
 import React from 'react';
 import { Button, Form } from 'react-bootstrap';
-import './DataSourceConfig.css';
 
 import DbExtractorRestClient from './DbExtractorRestClient';
 
@@ -91,8 +90,7 @@ function DataSourceConfigView({ driverClassNames = [],
 	});
 	
 	return (
-		<div className="dataSourceConfig">
-			<h3>Datasource Configuration</h3>
+		<React.Fragment>
 			<Form>
 				<Form.Group controlId="driverClassName">
 					<Form.Label>Driver Class Name</Form.Label>
@@ -119,7 +117,7 @@ function DataSourceConfigView({ driverClassNames = [],
 			</Form>
 			<Button onClick={handleTestConnection}>test</Button>
 			<p style={testResult.style}>{testResult.message}</p>
-		</div>);
+		</React.Fragment>);
 }
 
 export default DataSourceConfig;
