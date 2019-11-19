@@ -4,6 +4,7 @@ import { Navbar, Container, Row, Col, Accordion, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import DataSourceConfig from './DataSourceConfig';
+import TableDataFilters from './TableDataFilters';
 
 function App() {
 	return <React.Fragment>
@@ -28,7 +29,9 @@ function App() {
 						</Accordion>
 					</div>
 				</Col>
-				<Col md="10"></Col>
+				<Col md="10">
+					<TableDataFilters />
+				</Col>
 			</Row>
 		</Container>
 		
