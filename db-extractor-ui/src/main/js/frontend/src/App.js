@@ -1,4 +1,6 @@
 import React from 'react';
+import { Provider } from 'react-redux';
+import { store } from './store/store';
 import { Navbar, Container, Row, Col, Accordion, Card } from 'react-bootstrap';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -7,7 +9,7 @@ import DataSourceConfig from './DataSourceConfig';
 import TableDataFilters from './TableDataFilters';
 
 function App() {
-	return <React.Fragment>
+	return <Provider store={store}>
 		<Navbar bg="dark" variant="dark">
 			<Navbar.Brand>DB Extractor - React UI</Navbar.Brand>
 		</Navbar>
@@ -35,7 +37,7 @@ function App() {
 			</Row>
 		</Container>
 		
-	</React.Fragment>;
+	</Provider>;
 }
 
 export default App;
