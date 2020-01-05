@@ -1,5 +1,7 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { Button, Form } from 'react-bootstrap';
+import { fetchDriverClassNames, setDataSourceConfig } from './store/actions';
 
 import DbExtractorRestClient from './DbExtractorRestClient';
 
@@ -10,14 +12,11 @@ class DataSourceConfig extends React.Component {
 		this.componentDidMount = this.componentDidMount.bind(this);
 		this.handleChange = this.handleChange.bind(this);
 		this.handleTestConnection = this.handleTestConnection.bind(this);
+		this.state = {};
 	}
 	
 	componentDidMount() {
-		DbExtractorRestClient.fetchDriverClassNames()
-		.then(data => {
-			this.setState({ driverClassNames: data });
-		})
-		.catch(console.log);
+		this.props.fetchDriverClassNames();
 	}
 	
 	handleChange({ target }) {
@@ -54,7 +53,7 @@ class DataSourceConfig extends React.Component {
 	
 	handleTestConnection() {
 		
-		const dataSourceConfig = ({ id, name, driverClassName, url, username, password }) => {
+		const dataSourceConfig = ({ id, name, driverClassName, url, username = "", password }) => {
 			return { id, name, driverClassName, url, username, password };
 		};
 		
@@ -62,6 +61,7 @@ class DataSourceConfig extends React.Component {
 		DbExtractorRestClient.dataSourceConfigTest(dataSourceConfig(this.state))
 		.then(data => {
 			if (data.success === true) {
+				this.props.setDataSourceConfig(dataSourceConfig(this.state));
 				return { testResult: { style: { color: 'green' }, message: "success" }};
 			}
 			return { testResult: { style: { color: 'red' }, message: data.message }};
@@ -71,7 +71,7 @@ class DataSourceConfig extends React.Component {
 	}
 	
 	render() {
-		return <DataSourceConfigView {...this.state}
+		return <DataSourceConfigView {...this.state} {...this.props}
 			handleChange={this.handleChange}
 			handleTestConnection={this.handleTestConnection} />;
 	}
@@ -120,4 +120,17 @@ function DataSourceConfigView({ driverClassNames = [],
 		</React.Fragment>);
 }
 
-export default DataSourceConfig;
+function mapStateToProps(state) {
+	return {
+		driverClassNames: state.driverClassNames
+	};
+}
+
+function mapDispatchToProps(dispatch) {
+	return {
+		fetchDriverClassNames: () => dispatch(fetchDriverClassNames()),
+		setDataSourceConfig: dataSourceConfig => dispatch(setDataSourceConfig(dataSourceConfig))
+	};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(DataSourceConfig);
