@@ -12,6 +12,11 @@
 	<name>DB Extractor - React UI</name>
 	<packaging>war</packaging>
 
+	<properties>
+		<sonar.testExecutionReportPaths>src/main/js/frontend/sonar-report.xml</sonar.testExecutionReportPaths>
+		<sonar.javascript.lcov.reportPaths>src/main/js/frontend/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
+	</properties>
+
 	<build>
 		<pluginManagement>
 			<plugins>
