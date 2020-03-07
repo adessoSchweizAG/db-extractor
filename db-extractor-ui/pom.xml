@@ -13,6 +13,7 @@
 	<packaging>war</packaging>
 
 	<properties>
+		<sonar.sources>pom.xml,src/main/java,src/main/js/frontend/src</sonar.sources>
 		<sonar.testExecutionReportPaths>src/main/js/frontend/sonar-report.xml</sonar.testExecutionReportPaths>
 		<sonar.javascript.lcov.reportPaths>src/main/js/frontend/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
 	</properties>
@@ -20,6 +21,11 @@
 	<build>
 		<pluginManagement>
 			<plugins>
+				<plugin>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-maven-plugin</artifactId>
+					<version>2.2.5.RELEASE</version>
+				</plugin>
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-war-plugin</artifactId>
