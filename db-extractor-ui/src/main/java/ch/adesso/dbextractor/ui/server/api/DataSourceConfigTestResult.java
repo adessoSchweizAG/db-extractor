@@ -5,6 +5,10 @@ public class DataSourceConfigTestResult {
 	private boolean success;
 	private String message;
 
+	public DataSourceConfigTestResult() {
+
+	}
+
 	public DataSourceConfigTestResult(boolean success, String message) {
 		this.success = success;
 		this.message = message;

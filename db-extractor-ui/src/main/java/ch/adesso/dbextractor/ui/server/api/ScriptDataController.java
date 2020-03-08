@@ -54,6 +54,7 @@ public class ScriptDataController extends BaseContoller {
 		for (TableDataFilterDto dto : filters) {
 			DatabaseObject table = new DatabaseObject(dto.getCatalog(), dto.getSchema(), dto.getName());
 			TableDataFilter filter = new TableDataFilter(table);
+			filter.addWhereSql("1 = 1");
 			result.add(filter);
 		}
 		return result;
