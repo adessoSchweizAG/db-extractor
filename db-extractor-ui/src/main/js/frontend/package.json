@@ -7,7 +7,6 @@
     "@fortawesome/free-solid-svg-icons": "^5.12.0",
     "@fortawesome/react-fontawesome": "^0.1.8",
     "bootstrap": "^4.4.1",
-    "jest-sonar": "^0.2.5",
     "react": "^16.12.0",
     "react-bootstrap": "^1.0.0-beta.16",
     "react-dom": "^16.12.0",
@@ -21,7 +20,8 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom --reporters=default --reporters=jest-sonar --coverage",
+    "test": "react-scripts test --env=jsdom",
+    "test-ci": "react-scripts test --env=jsdom --reporters=default --reporters=jest-sonar --coverage",
     "eject": "react-scripts eject"
   },
   "jest": {
@@ -51,5 +51,12 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8080"
+  "proxy": "http://localhost:8080",
+  "devDependencies": {
+    "@testing-library/jest-dom": "^5.1.1",
+    "@testing-library/react": "^9.5.0",
+    "@testing-library/user-event": "^10.0.0",
+    "jest-fetch-mock": "^3.0.2",
+    "jest-sonar": "^0.2.5"
+  }
 }
