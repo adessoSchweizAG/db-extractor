@@ -14,8 +14,8 @@
 
 	<properties>
 		<sonar.sources>pom.xml,src/main/java,src/main/js/frontend/src</sonar.sources>
-		<sonar.excludes>src/main/js/frontend/src/**/*.test.js</sonar.excludes>
-		<sonar.test.inclusions>src/test/java/**,src/main/js/frontend/src/**/*.test.js</sonar.test.inclusions>
+		<sonar.excludes>db-extractor-ui/src/main/js/frontend/src/**/*.test.js,db-extractor-ui/src/main/js/frontend/src/**/*.spec.js</sonar.excludes>
+		<sonar.test.inclusions>src/test/java/**,src/main/js/frontend/src/**/*.test.js,src/main/js/frontend/src/**/*.spec.js</sonar.test.inclusions>
 		<sonar.testExecutionReportPaths>src/main/js/frontend/sonar-report.xml</sonar.testExecutionReportPaths>
 		<sonar.javascript.lcov.reportPaths>src/main/js/frontend/coverage/lcov.info</sonar.javascript.lcov.reportPaths>
 	</properties>
@@ -99,7 +99,7 @@
 							<environmentVariables>
 								<CI>true</CI>
 							</environmentVariables>
-							<arguments>run test</arguments>
+							<arguments>run test-ci</arguments>
 						</configuration>
 					</execution>
 				</executions>
