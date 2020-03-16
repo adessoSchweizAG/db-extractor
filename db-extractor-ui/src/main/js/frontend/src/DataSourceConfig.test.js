@@ -64,7 +64,7 @@ it('test connection', async () => {
 	userEvent.click(screen.getByText('test'));
 	expect(screen.getByText('testing ...')).toHaveStyle('color: black');
 	
-	expect(waitForElement(() => screen.getByText('success'))).resolves.toHaveStyle('color: green');
+	await expect(waitForElement(() => screen.getByText('success'))).resolves.toHaveStyle('color: green');
 	
 	expect(fetch.mock.calls.length).toEqual(2);
 	expect(fetch.mock.calls[1]).toEqual(['/rest/dataSourceConfig/dummy/test', {
@@ -86,7 +86,7 @@ it('test connection fail', async () => {
 	
 	userEvent.click(screen.getByText("test"));
 	
-	expect(waitForElement(() => screen.getByText('No suitable driver found for'))).resolves.toHaveStyle('color: red');
+	await expect(waitForElement(() => screen.getByText('No suitable driver found for'))).resolves.toHaveStyle('color: red');
 	expect(fetch.mock.calls.length).toEqual(2);
 	expect(fetch.mock.calls[1]).toEqual(['/rest/dataSourceConfig/dummy/test', {
 			headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
