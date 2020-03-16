@@ -1,5 +1,6 @@
 language: java
 services:
+  - mysql
   - postgresql
 addons:
   sonarcloud:
@@ -11,6 +12,7 @@ cache:
     - $HOME/.m2/repository
 install: true
 before_script:
+  - mysql -e 'CREATE DATABASE demo;'
   - git config remote.origin.fetch "+refs/heads/master:refs/remotes/origin/master"
   - git fetch
 script:

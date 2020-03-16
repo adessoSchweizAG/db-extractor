@@ -3,7 +3,6 @@ package ch.adesso.dbextractor.core;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 public abstract class AbstractDbSupport implements DbSupport {
 
@@ -50,7 +49,7 @@ public abstract class AbstractDbSupport implements DbSupport {
 
 	protected String toSqlValueString(Date value) {
 
-		Calendar cal = GregorianCalendar.getInstance();
+		Calendar cal = Calendar.getInstance();
 		cal.setTime(value);
 
 		final SimpleDateFormat sdf;
