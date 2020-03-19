@@ -24,8 +24,8 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 
 	private static final String SQL_SELECT_FOREIGN_KEY = "SELECT CURRENT_CATALOG AS CURRENT_CATALOG, CURRENT_SCHEMA AS CURRENT_SCHEMA, \r\n"
 			+ "  c.CONSTRAINT_CATALOG, c.CONSTRAINT_SCHEMA, c.CONSTRAINT_NAME, \r\n"
-			+ "  fc.TABLE_CATALOG AS FK_TABLE_CATALOG, fc.TABLE_SCHEMA AS FK_TABLE_SCHEMA, fc.TABLE_NAME AS FK_TABLE_NAME, fc.COLUMN_NAME AS FK_COLUMN_NAME, \r\n"
-			+ "  a.TABLE_CATALOG AS PK_TABLE_CATALOG, a.TABLE_SCHEMA AS PK_TABLE_SCHEMA, a.TABLE_NAME AS PK_TABLE_NAME, a.COLUMN_NAME AS PK_COLUMN_NAME \r\n"
+			+ "  fc.TABLE_CATALOG AS FKTABLE_CATALOG, fc.TABLE_SCHEMA AS FKTABLE_SCHEMA, fc.TABLE_NAME AS FKTABLE_NAME, fc.COLUMN_NAME AS FKCOLUMN_NAME, \r\n"
+			+ "  a.TABLE_CATALOG AS PKTABLE_CATALOG, a.TABLE_SCHEMA AS PKTABLE_SCHEMA, a.TABLE_NAME AS PKTABLE_NAME, a.COLUMN_NAME AS PKCOLUMN_NAME \r\n"
 			+ "FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS                c \r\n"
 			+ "  INNER JOIN INFORMATION_SCHEMA.KEY_COLUMN_USAGE        fc ON fc.CONSTRAINT_CATALOG = c.CONSTRAINT_CATALOG AND fc.CONSTRAINT_SCHEMA = c.CONSTRAINT_SCHEMA AND fc.CONSTRAINT_NAME = c.CONSTRAINT_NAME \r\n"
 			+ "                                                          AND fc.TABLE_CATALOG = c.TABLE_CATALOG AND fc.TABLE_SCHEMA = c.TABLE_SCHEMA AND fc.TABLE_NAME = c.TABLE_NAME \r\n"
@@ -82,14 +82,14 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 			Map<DatabaseObject, ForeignKey> mapForeignKey = new HashMap<>();
 			while (rs.next()) {
 				DatabaseObject constraint = databaseObject(rs, "CONSTRAINT");
-				DatabaseObject fkTable = databaseObject(rs, "FK_TABLE");
-				DatabaseObject pkTable = databaseObject(rs, "PK_TABLE");
+				DatabaseObject fkTable = databaseObject(rs, "FKTABLE");
+				DatabaseObject pkTable = databaseObject(rs, "PKTABLE");
 
 				ForeignKey foreignKey = mapForeignKey.computeIfAbsent(constraint,
 						k -> new ForeignKey(constraint, fkTable, pkTable));
 
-				foreignKey.getFkColumnNames().add(rs.getString("FK_COLUMN_NAME"));
-				foreignKey.getPkColumnNames().add(rs.getString("PK_COLUMN_NAME"));
+				foreignKey.getFkColumnNames().add(rs.getString("FKCOLUMN_NAME"));
+				foreignKey.getPkColumnNames().add(rs.getString("PKCOLUMN_NAME"));
 			}
 			return new ArrayList<>(mapForeignKey.values());
 		} catch (SQLException e) {
