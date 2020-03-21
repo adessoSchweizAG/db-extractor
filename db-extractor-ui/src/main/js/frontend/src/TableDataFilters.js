@@ -39,7 +39,8 @@ class TableDataFilters extends React.Component {
 	}
 	
 	render() {
-		return <React.Fragment>
+		return (
+			<React.Fragment>
 				<Form>
 					{(this.state.tableDataFilters || []).map((item, index) => {
 						return <TableDataFilterView key={index}
@@ -49,7 +50,7 @@ class TableDataFilters extends React.Component {
 					})}
 					<TableDataFilter handleAddTableDataFilter={this.handleAddTableDataFilter} />
 				</Form>
-			</React.Fragment>;
+			</React.Fragment>);
 	}
 }
 
@@ -75,9 +76,10 @@ class TableDataFilter extends React.Component {
 	}
 	
 	render() {
-		return <TableDataFilterView {...this.state}
+		return (
+			<TableDataFilterView {...this.state}
 				handleChange={this.handleChange}
-				handleAddTableDataFilter={this.props.handleAddTableDataFilter && this.handleAddTableDataFilter} />;
+				handleAddTableDataFilter={this.props.handleAddTableDataFilter && this.handleAddTableDataFilter} />);
 	}
 }
 

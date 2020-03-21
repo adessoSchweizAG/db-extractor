@@ -13,7 +13,7 @@ import DataSourceConfig from './DataSourceConfig';
 enableFetchMocks();
 
 function renderWithProvider(component) {
-	return { ...render(<Provider store={store}>{component}</Provider>) }
+	return render(<Provider store={store}>{component}</Provider>);
 }
 
 beforeEach(() => {

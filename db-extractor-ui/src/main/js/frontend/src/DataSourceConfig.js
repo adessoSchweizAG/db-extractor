@@ -71,9 +71,10 @@ class DataSourceConfig extends React.Component {
 	}
 	
 	render() {
-		return <DataSourceConfigView {...this.state} {...this.props}
-			handleChange={this.handleChange}
-			handleTestConnection={this.handleTestConnection} />;
+		return (
+			<DataSourceConfigView {...this.state} {...this.props}
+					handleChange={this.handleChange}
+					handleTestConnection={this.handleTestConnection} />);
 	}
 }
 

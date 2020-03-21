@@ -9,7 +9,7 @@ import '@testing-library/jest-dom/extend-expect';
 import TableDataFilters from './TableDataFilters';
 
 function renderWithProvider(component) {
-	return { ...render(<Provider store={store}>{component}</Provider>) }
+	return render(<Provider store={store}>{component}</Provider>);
 }
 
 it('render with provider', () => {

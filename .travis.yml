@@ -18,7 +18,6 @@ cache:
     - $HOME/.m2/repository
     - db-extractor/db-extractor-ui/src/main/js/frontend/node
     - db-extractor/db-extractor-ui/src/main/js/frontend/node_modules
-    - db-extractor/db-extractor-ui/src/main/js/frontend/package-lock.json
 install: true
 before_script:
   - mysql -e 'CREATE DATABASE demo;'
