@@ -53,7 +53,7 @@ public class DbSupportMySqlIT {
 			runSqlScript(con, DbSupportMySqlIT.class.getResourceAsStream("DbSupportMySqlIT.data.sql"));
 		}
 
-		dbSupport = DbSupportFactory.createInstance(DbSupportMySql.DRIVER_CLASS_NAME, dataSource);
+		dbSupport = DbSupportFactory.createInstance(dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {

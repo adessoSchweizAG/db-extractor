@@ -5,6 +5,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.Map;
@@ -27,6 +31,15 @@ public final class DbSupportFactory {
 
 	public static Collection<String> getDriverClassNames() {
 		return LazyHolder.REGISTRY.keySet();
+	}
+
+	public static DbSupport createInstance(DataSource dataSource) throws SQLException {
+
+		try (Connection connection = dataSource.getConnection()) {
+			String url = connection.getMetaData().getURL();
+			Driver driver = DriverManager.getDriver(url);
+			return createInstance(driver.getClass().getName(), dataSource);
+		}
 	}
 
 	public static DbSupport createInstance(String driverClassName, DataSource dataSource) {
