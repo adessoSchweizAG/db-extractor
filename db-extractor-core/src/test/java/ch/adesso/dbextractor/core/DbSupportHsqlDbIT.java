@@ -54,7 +54,7 @@ public class DbSupportHsqlDbIT {
 			runSqlScript(con, DbSupportHsqlDbIT.class.getResourceAsStream("DbSupportHsqlDbIT.data.sql"));
 		}
 
-		dbSupport = DbSupportFactory.createInstance(DbSupportHsqlDb.DRIVER_CLASS_NAME, dataSource);
+		dbSupport = DbSupportFactory.createInstance(dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {

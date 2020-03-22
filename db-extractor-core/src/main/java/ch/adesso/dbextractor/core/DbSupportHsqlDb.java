@@ -4,7 +4,7 @@ import javax.sql.DataSource;
 
 public class DbSupportHsqlDb extends AbstractDbSupportSql92 implements DbSupport {
 
-	public static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbcDriver";
+	public static final String DRIVER_CLASS_NAME = "org.hsqldb.jdbc.JDBCDriver";
 
 	public DbSupportHsqlDb(DataSource dataSource) {
 		super(dataSource);

@@ -9,6 +9,7 @@ import org.hamcrest.CoreMatchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -19,7 +20,8 @@ import ch.adesso.dbextractor.core.TableDataFilter;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { TestDataSourceConfig.class, DbExtractorConfig.class })
-public class DbExtractorConfigIT {
+@ActiveProfiles("h2")
+public class DbExtractorConfigH2IT {
 
 	@Autowired
 	private ScriptData scriptData;

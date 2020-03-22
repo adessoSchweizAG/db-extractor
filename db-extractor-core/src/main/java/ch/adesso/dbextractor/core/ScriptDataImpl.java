@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,7 +20,6 @@ public class ScriptDataImpl implements ScriptData {
 
 	private Map<DatabaseObject, String> primaryKey;
 	private List<ForeignKey> foreignKey;
-	private Map<DatabaseObject, TableDataFilter> mapTables = new HashMap<>();
 
 	public ScriptDataImpl(DbSupport dbSupport) {
 		this.inputDbSupport = dbSupport;
@@ -28,13 +28,18 @@ public class ScriptDataImpl implements ScriptData {
 	@Override
 	public void script(List<TableDataFilter> filters, DataOutput output) {
 
+		output.initialize(filters);
+
+		Map<DatabaseObject, TableDataFilter> mapTables = new HashMap<>();
 		for (TableDataFilter table : filters) {
 			mapTables.put(table.getTable(), table);
 		}
 
-		output.initialize(filters);
+		collectRowIdentifierRecursive(mapTables);
+		List<TableDataFilter> tables = sortTables(mapTables);
+		removeWithoutFilter(tables);
+		setSortOrder(tables);
 
-		List<TableDataFilter> tables = collectData();
 		for (TableDataFilter table : tables) {
 			List<ForeignKey> foreignKeys = getForeignKeys(table.getTable());
 
@@ -51,18 +56,19 @@ public class ScriptDataImpl implements ScriptData {
 		output.finish();
 	}
 
-	private List<TableDataFilter> collectData() {
-		while (!isFilterDone()) {
+	private void collectRowIdentifierRecursive(Map<DatabaseObject, TableDataFilter> mapTables) {
+
+		while (mapTables.values().stream().anyMatch(TableDataFilter::hasFilterModified)) {
 			for (TableDataFilter table : new ArrayList<>(mapTables.values())) {
 				if (table.hasFilterModified()) {
 					List<ForeignKey> foreignKeys = getForeignKeys(table.getTable());
 					try (Connection con = inputDbSupport.getConnection();
 							Statement stmt = con.createStatement();
-							ResultSet rs = stmt.executeQuery(table.toSelectSqlModified(inputDbSupport));) {
+							ResultSet rs = stmt.executeQuery(table.toSelectSqlModified(inputDbSupport))) {
 
 						table.resetFilterModified();
 						while (rs.next()) {
-							handleForeignKeyConstraints(table, foreignKeys, rs);
+							handleForeignKeyConstraints(mapTables, table, foreignKeys, rs);
 						}
 
 					} catch (SQLException e) {
@@ -71,33 +77,18 @@ public class ScriptDataImpl implements ScriptData {
 				}
 			}
 		}
-
-		List<TableDataFilter> tables = sortTables();
-
-		for (Iterator<TableDataFilter> it = tables.iterator(); it.hasNext();) {
-			TableDataFilter table = it.next();
-
-			if (!table.hasFilter()) {
-				it.remove();
-				continue;
-			}
-			if (table.getOrderBy() == null) {
-				table.setOrderBy(getPrimaryKeyColumns(table.getTable()));
-			}
-		}
-
-		return tables;
 	}
 
-	void handleForeignKeyConstraints(TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs)
-			throws SQLException {
+	void handleForeignKeyConstraints(Map<DatabaseObject, TableDataFilter> mapTables,
+			TableDataFilter table, List<ForeignKey> foreignKeys, ResultSet rs) throws SQLException {
 		
 		for (ForeignKey fk : foreignKeys) {
 			
 			if (fk.getFkColumnNames().size() == 1) {
 				Object columnValue = rs.getObject(fk.getFkColumnNames().get(0));
 				if (columnValue != null) {
-					getTableDataFilter(fk.getPkTable()).addWhereInValue(fk.getPkColumnNames().get(0), columnValue);
+					mapTables.computeIfAbsent(fk.getPkTable(), TableDataFilter::new)
+							.addWhereInValue(fk.getPkColumnNames().get(0), columnValue);
 				}
 			}
 			else {
@@ -113,14 +104,15 @@ public class ScriptDataImpl implements ScriptData {
 					sb.append(" AND ");
 				}
 				sb.replace(sb.length() - 5, sb.length(), ")");
-				getTableDataFilter(fk.getPkTable()).addWhereSql(sb.toString());
+				mapTables.computeIfAbsent(fk.getPkTable(), TableDataFilter::new)
+						.addWhereSql(sb.toString());
 			}
 
 			table.getDependsOn().add(fk.getPkTable());
 		}
 	}
 
-	List<TableDataFilter> sortTables() {
+	private List<TableDataFilter> sortTables(Map<DatabaseObject, TableDataFilter> mapTables) {
 		List<TableDataFilter> tables = new ArrayList<>(mapTables.values());
 		Collections.sort(tables, new Comparator<TableDataFilter>() {
 
@@ -153,21 +145,27 @@ public class ScriptDataImpl implements ScriptData {
 		return tables;
 	}
 
-	boolean isFilterDone() {
+	private void removeWithoutFilter(Collection<TableDataFilter> tables) {
 
-		for (TableDataFilter table : mapTables.values()) {
-			if (table.hasFilterModified()) {
-				return false;
+		for (Iterator<TableDataFilter> it = tables.iterator(); it.hasNext();) {
+			TableDataFilter table = it.next();
+
+			if (!table.hasFilter()) {
+				it.remove();
 			}
 		}
-		return true;
 	}
 
-	protected TableDataFilter getTableDataFilter(DatabaseObject table) {
-		return mapTables.computeIfAbsent(table, TableDataFilter::new);
+	private void setSortOrder(Collection<TableDataFilter> tables) {
+
+		for (TableDataFilter table : tables) {
+			if (table.getOrderBy() == null) {
+				table.setOrderBy(getPrimaryKeyColumns(table.getTable()));
+			}
+		}
 	}
 
-	String getPrimaryKeyColumns(DatabaseObject table) {
+	private String getPrimaryKeyColumns(DatabaseObject table) {
 
 		if (primaryKey == null) {
 			primaryKey = inputDbSupport.loadPrimaryKey();
@@ -175,7 +173,7 @@ public class ScriptDataImpl implements ScriptData {
 		return primaryKey.get(table);
 	}
 
-	List<ForeignKey> getForeignKeys(DatabaseObject table) {
+	private List<ForeignKey> getForeignKeys(DatabaseObject table) {
 
 		if (foreignKey == null) {
 			foreignKey = inputDbSupport.loadForeignKey();

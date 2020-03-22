@@ -54,7 +54,7 @@ public class DbSupportH2IT {
 			runSqlScript(con, DbSupportH2IT.class.getResourceAsStream("DbSupportH2IT.data.sql"));
 		}
 
-		dbSupport = DbSupportFactory.createInstance(DbSupportH2.DRIVER_CLASS_NAME, dataSource);
+		dbSupport = DbSupportFactory.createInstance(dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {

@@ -53,7 +53,7 @@ public class DbSupportPostgresIT {
 			runSqlScript(con, DbSupportPostgresIT.class.getResourceAsStream("DbSupportPostgresIT.data.sql"));
 		}
 
-		dbSupport = DbSupportFactory.createInstance(DbSupportPostgres.DRIVER_CLASS_NAME, dataSource);
+		dbSupport = DbSupportFactory.createInstance(dataSource);
 	}
 
 	private Properties dataSourceProperties(String url) {
