@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import ch.adesso.dbextractor.core.DbSupport;
+import ch.adesso.dbextractor.core.DbSupportDerby;
 import ch.adesso.dbextractor.core.DbSupportFactory;
 import ch.adesso.dbextractor.core.DbSupportH2;
 import ch.adesso.dbextractor.core.DbSupportHsqlDb;
@@ -47,6 +48,12 @@ public class DbExtractorConfig {
 	@Profile("h2")
 	public DbSupport dbSupportH2(DataSource dataSource) {
 		return new DbSupportH2(dataSource);
+	}
+
+	@Bean
+	@Profile("derby")
+	public DbSupport dbSupportDerby(DataSource dataSource) {
+		return new DbSupportDerby(dataSource);
 	}
 
 	@Bean
