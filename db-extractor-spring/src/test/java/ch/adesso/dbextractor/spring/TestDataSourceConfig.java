@@ -13,7 +13,7 @@ public class TestDataSourceConfig {
 
 	@Bean(destroyMethod = "shutdown")
 	@Profile({ "default", "hsqldb" })
-	public DataSource dataSourceHsqlDb() {
+	public DataSource dataSource() {
 		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder()
 				.setType(EmbeddedDatabaseType.HSQL)
 				.generateUniqueName(true)
@@ -23,9 +23,18 @@ public class TestDataSourceConfig {
 
 	@Bean(destroyMethod = "shutdown")
 	@Profile("h2")
-	public DataSource dataSource() {
+	public DataSource dataSourceH2() {
 		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder()
 				.setType(EmbeddedDatabaseType.H2)
+				.addDefaultScripts();
+		return builder.build();
+	}
+
+	@Bean(destroyMethod = "shutdown")
+	@Profile("derby")
+	public DataSource dataSourceDerby() {
+		EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder()
+				.setType(EmbeddedDatabaseType.DERBY)
 				.addDefaultScripts();
 		return builder.build();
 	}

@@ -40,7 +40,7 @@ public class DbSupportH2 extends AbstractDbSupportSql92 implements DbSupport {
 
 	@Override
 	protected String toSqlValueString(byte[] value) {
-		StringBuilder sb = new StringBuilder(value.length * 2 + 12);
+		StringBuilder sb = new StringBuilder(value.length * 2 + 3);
 		sb.append("X'");
 		for (byte b : value) {
 			sb.append(String.format("%02x", b));

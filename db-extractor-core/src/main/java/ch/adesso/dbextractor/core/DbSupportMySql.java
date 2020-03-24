@@ -55,7 +55,7 @@ public class DbSupportMySql extends AbstractDbSupportSql92 {
 
 	@Override
 	protected String toSqlValueString(byte[] value) {
-		StringBuilder sb = new StringBuilder(value.length * 2 + 12);
+		StringBuilder sb = new StringBuilder(value.length * 2 + 9);
 		sb.append("UNHEX('");
 		for (byte b : value) {
 			sb.append(String.format("%02x", b));
