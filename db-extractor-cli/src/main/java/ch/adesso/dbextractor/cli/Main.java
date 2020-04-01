@@ -7,12 +7,11 @@ import java.util.Map.Entry;
 import java.util.Properties;
 
 import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.MissingOptionException;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.apache.commons.dbcp2.BasicDataSource;
 import org.apache.commons.dbcp2.BasicDataSourceFactory;
 import org.apache.logging.log4j.LogManager;
@@ -45,7 +44,7 @@ public class Main {
 	private static final Option OPT_HELP = Option.builder("h").longOpt("help").desc("print this message").build();
 
 	public static void main(String[] args) {
-
+		
 		Options options = new Options();
 		options.addOption(OPT_HELP);
 		
@@ -61,13 +60,15 @@ public class Main {
 		
 		try {
 			// parse the command line arguments
-			CommandLineParser parser = new DefaultParser();
-			CommandLine line = parser.parse(options, args);
+			DefaultParser parser = new DefaultParser();
+			CommandLine line = parser.parse(createOptionsNonRequired(options), args);
 
 			if (args.length == 0 || line.hasOption(OPT_HELP.getOpt())) {
 				printHelp(options);
 			}
 			else {
+				line = parser.parse(options, args);
+
 				BasicDataSource dataSource = createDataSource(line);
 				DbSupport dbSupport = DbSupportFactory.createInstance(line.getOptionValue(OPT_DRIVER), dataSource);
 
@@ -75,7 +76,7 @@ public class Main {
 				Collection<TableDataFilter> tableDataFilters = createTableDataFilters(line);
 				scriptData.script(tableDataFilters, new OutputSqlScript(dbSupport, System.out));
 			}
-		} catch (MissingOptionException e) {
+		} catch (ParseException e) {
 			printHelp(options);
 		} catch (Exception exp) {
 			LOGGER.error("Parsing failed. Reason: {}: {}", exp.getClass().getName(), exp.getMessage(), exp);
@@ -87,6 +88,19 @@ public class Main {
 		formatter.setOptionComparator(null);
 		String cmdLineSyntax = "dbExtractor -driver org.hsqldb.jdbc.JDBCDriver -url jdbc:hsqldb:mem:memdb -username SA -FItem=\"1=0\" -OItem=\"ID DESC\"";
 		formatter.printHelp(cmdLineSyntax, options);
+	}
+
+	private static Options createOptionsNonRequired(Options options) {
+
+		Options optionsHelp = new Options();
+		for (Option opt : options.getOptions()) {
+			Option clone = new Option(opt.getOpt(), opt.getLongOpt(), opt.hasArg(), opt.getDescription());
+			clone.setArgs(opt.getArgs());
+			clone.setValueSeparator(opt.getValueSeparator());
+			clone.setArgName(opt.getArgName());
+			optionsHelp.addOption(clone);
+		}
+		return optionsHelp;
 	}
 
 	private static BasicDataSource createDataSource(CommandLine line) throws Exception {
