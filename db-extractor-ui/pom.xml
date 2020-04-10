@@ -61,6 +61,11 @@
 							<directory>src/main/js/frontend/build</directory>
 						</resource>
 					</webResources>
+					<archive>
+						<manifestEntries>
+							<Loader-Path>WEB-INF/lib-provided,WEB-INF/lib,WEB-INF/classes,file:lib/</Loader-Path>
+						</manifestEntries>
+					</archive>
 				</configuration>
 			</plugin>
 			
@@ -127,6 +132,13 @@
 				<configuration>
 					<mainClass>ch.adesso.dbextractor.ui.server.ServerApplication</mainClass>
 				</configuration>
+				<dependencies>
+					<dependency>
+						<groupId>ch.adesso</groupId>
+						<artifactId>db-extractor-spring-tools</artifactId>
+						<version>${project.version}</version>
+					</dependency>
+				</dependencies>
 			</plugin>
 		</plugins>
 	</build>
