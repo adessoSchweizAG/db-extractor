@@ -1,0 +1,1 @@
+org.springframework.boot.loader.tools.LayoutFactory=ch.adesso.dbextractor.spring.tools.CustomLayoutFactory
