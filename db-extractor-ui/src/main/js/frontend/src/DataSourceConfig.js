@@ -31,9 +31,21 @@ class DataSourceConfig extends React.Component {
 				urlPrefix = "jdbc:hsqldb:";
 				url = "jdbc:hsqldb:mem:memdb";
 			}
+			else if (value === "org.apache.derby.jdbc.AutoloadedDriver") {
+				urlPrefix = "jdbc:derby:";
+				url = "jdbc:derby:memory:memdb;create=true";
+			}
+			else if (value === "org.h2.Driver") {
+				urlPrefix = "jdbc:h2:";
+				url = "jdbc:h2:mem:";
+			}
 			else if (value === "org.postgresql.Driver") {
 				urlPrefix = "jdbc:postgresql:";
-				url = "jdbc:postgresql:";
+				url = urlPrefix;
+			}
+			else if (value === "com.mysql.jdbc.Driver" || value === "com.mysql.cj.jdbc.Driver") {
+				urlPrefix = "jdbc:mysql:";
+				url = urlPrefix;
 			}
 			else {
 				urlPrefix = "jdbc:";
