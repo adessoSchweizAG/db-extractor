@@ -20,6 +20,7 @@
 		<module>db-extractor-core</module>
 		<module>db-extractor-spring</module>
 		<module>db-extractor-ui</module>
+		<module>db-extractor-spring-tools</module>
 	</modules>
 
 	<properties>
