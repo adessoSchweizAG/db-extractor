@@ -4,6 +4,7 @@ import { store } from './store/store';
 import { Navbar, Container, Row, Col, Accordion, Card } from 'react-bootstrap';
 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
 
 import DataSourceConfig from './DataSourceConfig';
 import TableDataFilters from './TableDataFilters';
