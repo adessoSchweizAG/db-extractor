@@ -16,7 +16,6 @@ addons:
 cache:
   directories:
     - $HOME/.m2/repository
-    - db-extractor/db-extractor-ui/src/main/js/frontend/node
     - db-extractor/db-extractor-ui/src/main/js/frontend/node_modules
 install: true
 before_script:
