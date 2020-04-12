@@ -5,7 +5,38 @@
 [![sonarcloud.io: Code Smell](https://sonarcloud.io/api/project_badges/measure?project=ch.adesso%3Adb-extractor&metric=code_smells)](https://sonarcloud.io/dashboard?id=ch.adesso%3Adb-extractor)
 
 # db-extractor
-Selectivly extraction of data from relational databases into sql scripts
+Selectively extraction of data from relational databases into sql scripts
+
+
+## Web Based Interface (DBExtractor - UI)
+
+### Standalone spring boot application
+DbExtractor - UI can be directly started as spring boot application. All settings are stored in a file based hsqldb.
+Additional JDBC drivers can be placed in the `lib` directory.
+
+#### Startup
+ 1. Open Command Line Prompt
+ 1. Run `java -jar db-extractor-ui.jar`
+ 1. Navigate to http://localhost:8080 with your preferred web browser.
+
+
+### Web application in tomcat
+DbExtractor - UI can be deployed as web app in tomcat. The database for the settings must be provided as JNDI Datasource.
+
+#### Installation
+ 1. Add JDBC driver to `$CATALINA_HOME/lib` directory
+ 1. Configure JNDI Resource in `context.xml`
+```xml
+<Context>
+	<Resource name="jdbc/DbExtractorDataSource" auth="Container" type="javax.sql.DataSource"
+		maxTotal="100" maxIdle="30" maxWaitMillis="10000"
+		username="sa" password="sa" driverClassName="org.hsqldb.jdbc.JDBCDriver"
+		url="jdbc:hsqldb:mem:DbExtractor" />
+</Context>
+```
+ 3. put db-extractor-ui.war to webapps directory
+ 1. start tomcat
+ 1. Navigate to http://localhost:8080/db-extractor-ui with your preferred web browser.
 
 # Maven Repository
 To use db-extractor-core in your own project you can include the following maven settings.
