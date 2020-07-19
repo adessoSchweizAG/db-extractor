@@ -1,7 +1,10 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-solid-svg-icons';
 import { Button, Form, Col } from 'react-bootstrap';
+
+import DbExtractorRestClient from './DbExtractorRestClient';
 
 class TableDataFilters extends React.Component {
 
@@ -10,8 +13,10 @@ class TableDataFilters extends React.Component {
 		this.handleAddTableDataFilter = this.handleAddTableDataFilter.bind(this);
 		this.handleChangeTableDataFilter = this.handleChangeTableDataFilter.bind(this);
 		this.handleRemoveTableDataFilter = this.handleRemoveTableDataFilter.bind(this);
+		this.handleScriptData = this.handleScriptData.bind(this);
+		this.handleScriptDataDownload = this.handleScriptDataDownload.bind(this);
 		
-		this.state = { tableDataFilters: [] };
+		this.state = { tableDataFilters: [], generatedScript: "" };
 	}
 	
 	handleAddTableDataFilter(tableDataFilter) {
@@ -38,6 +43,35 @@ class TableDataFilters extends React.Component {
 		});
 	}
 	
+	handleScriptData() {
+		DbExtractorRestClient.scriptData(this.props.dataSourceConfig, this.state.tableDataFilters)
+		.then(data => {
+			return { generatedScript: data };
+		})
+		.then(state => this.setState(state))
+		.catch(console.log);
+	}
+	
+	handleScriptDataDownload() {
+		DbExtractorRestClient.scriptData(this.props.dataSourceConfig, this.state.tableDataFilters)
+		.then(data => {
+			let blob = new Blob([data], { type: "text/plain" });
+			let url = URL.createObjectURL(blob);
+			let a = document.createElement('a');
+			a.href = url;
+			a.download = 'script.sql';
+			const clickHandler = () => {
+				setTimeout(() => {
+						URL.revokeObjectURL(url);
+						a.removeEventListener('click', clickHandler);
+					}, 150);
+			};
+			a.addEventListener('click', clickHandler, false);
+			a.click();
+		})
+		.catch(console.log);
+	}
+	
 	render() {
 		return (
 			<React.Fragment>
@@ -49,6 +83,19 @@ class TableDataFilters extends React.Component {
 								handleRemoveTableDataFilter={() => this.handleRemoveTableDataFilter(item) } />
 					})}
 					<TableDataFilter handleAddTableDataFilter={this.handleAddTableDataFilter} />
+					<Form.Row>
+						<Col>
+							<Button onClick={this.handleScriptData}>generate SQL</Button>
+						</Col>
+						<Col>
+						<Button onClick={this.handleScriptDataDownload}>download SQL</Button>
+					</Col>
+					</Form.Row>
+					<Form.Row>
+						<Col>
+							<Form.Control as="textarea" rows="3" readOnly={true} value={this.state.generatedScript} />
+						</Col>
+					</Form.Row>
 				</Form>
 			</React.Fragment>);
 	}
@@ -95,4 +142,10 @@ function TableDataFilterView({ catalog = "", schema = "", name = "",
 		</Form.Row>);
 }
 
-export default TableDataFilters;
+function mapStateToProps(state) {
+	return {
+		dataSourceConfig: state.dataSourceConfig
+	};
+}
+
+export default connect(mapStateToProps)(TableDataFilters);
