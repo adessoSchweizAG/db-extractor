@@ -20,6 +20,15 @@ const DbExtractorRestClient = {
 			body: JSON.stringify(dataSourceConfig)
 		})
 		.then(response => response.json());
+	},
+	
+	scriptData: function(dataSourceConfig, tableDataFilters) {
+		return fetch(expandUrl('rest/scriptData'), {
+			headers: { "Accept": "text/plain", "Content-Type": "application/json" },
+			method: 'POST',
+			body: JSON.stringify({ dataSourceConfig: dataSourceConfig, filters: tableDataFilters })
+		})
+		.then(response => response.text());
 	}
 }
 
