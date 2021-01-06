@@ -1,6 +1,10 @@
 language: java
 os: linux
 dist: xenial
+env:
+  global:
+    # travis encrypt GITHUB_TOKEN=...
+    - secure: "IFVCX2DYB/2cXXnbduhJviAEz9btKR1T/Aa4R3p1uOfam7d1bDTe9/qvAIo4/LhCWx74XEl9IDL2f4OYmdEQdFYlr6MN31qv8NS+x2BbiOzxl6CS5iZarf+RlWHXPXHQD57NNBi6GMhxm6UarnAr+WBWdLXhsfAG5wukMfoEoGU3Y1bb2E9QGnnuAJ7RFaNQy6Cwb25naLz7EmwI1cHGAmfAZxVcogrkJMgU9gcnoIJOk2zPw63igqAwEgoRgx+gW1J3K0VlaLzlUeh7TvTZdxejY4JaqnUCKcBugF6jgiq9gf/lOWNSi8R6VLDr9zDMGyi/r3kzZzjDi0Zxyh1mFMuhVA++T7OecPOZ505k+gnX3iLvko1bLLYv+yyrlL/bdK4kGjwMH6Wsgr7TwdTwuOiHujBbbiwbp0Ysij6Lp8AR2QMfw63ONSgERd/Eu31jdC8LYF6x5sDBviPrYzw6IXeQb6SlJ2prZ0PjOTxylzsEIDM/iByS6YyIfWGQMvgn4utHPjgIk3f6F+qvdNzwd5VQZfQg5sPbvjlSaVsMDA/+Ih3M14tTHPLanXwXeNXKI6B8FurzlynyzrS/2EIF0UL+KSECVctP94Rvg5iYIbr7j3BLxyZEODDUb2kThJVXGjwT/LfXkfBdLbZArRegdV8ylRM47CqxAQlbIcRoJm4="
 services:
   - mysql
   - postgresql
@@ -19,6 +23,7 @@ before_script:
   - git fetch
 script:
   - mvn clean verify sonar:sonar
+  - if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_EVENT_TYPE" = "push" ]; then mvn deploy -s .travis/settings.xml -pl db-extractor-core,db-extractor-spring -am; fi
 before_deploy:
   - export MVN_PROJECT_VERSION=$(mvn -Dexec.executable='echo' -Dexec.args='${project.version}' --non-recursive exec:exec -q)
 deploy:

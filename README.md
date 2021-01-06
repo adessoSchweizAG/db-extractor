@@ -6,3 +6,28 @@
 
 # db-extractor
 Selectivly extraction of data from relational databases into sql scripts
+
+# Maven Repository
+To use db-extractor-core in your own project you can include the following maven settings.
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	
+	<repositories>
+		<repository>
+			<id>github-db-executor</id>
+			<url>https://maven.pkg.github.com/adessoSchweizAG/db-extractor</url>
+		</repository>
+	</repositories>
+	
+	<dependencies>
+		<dependency>
+			<groupId>ch.adesso</groupId>
+			<artifactId>db-extractor-core</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+	<dependencies>
+</project>
+```
