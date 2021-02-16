@@ -25,6 +25,7 @@ before_script:
   - git config remote.origin.fetch "+refs/heads/master:refs/remotes/origin/master"
   - git fetch
 script:
+  - nvm use
   - mvn clean verify sonar:sonar
   - if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_EVENT_TYPE" = "push" ]; then mvn deploy -s .travis/settings.xml -pl db-extractor-core,db-extractor-spring -am; fi
 before_deploy:
