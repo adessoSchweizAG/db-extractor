@@ -7,7 +7,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
 
@@ -67,7 +66,7 @@ public class ScriptDataImplTest {
 		fk.getFkColumnNames().add("fkColumnName1");
 		fk.getPkColumnNames().add("pkColumnName1");
 
-		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
+		doReturn("fkColumnValue1").when(rs).getObject("fkColumnName1");
 
 		scriptData.handleForeignKeyConstraints(mapTables, fkTableDataFilter, Collections.singletonList(fk), rs);
 
@@ -98,8 +97,8 @@ public class ScriptDataImplTest {
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 
-		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
-		doReturn("fkColumnValue2").when(rs).getObject(eq("fkColumnName2"));
+		doReturn("fkColumnValue1").when(rs).getObject("fkColumnName1");
+		doReturn("fkColumnValue2").when(rs).getObject("fkColumnName2");
 
 		scriptData.handleForeignKeyConstraints(mapTables, fkTableDataFilter, Collections.singletonList(fk), rs);
 
@@ -117,7 +116,7 @@ public class ScriptDataImplTest {
 		fk.getFkColumnNames().addAll(Arrays.asList("fkColumnName1", "fkColumnName2"));
 		fk.getPkColumnNames().addAll(Arrays.asList("pkColumnName1", "pkColumnName2"));
 
-		doReturn("fkColumnValue1").when(rs).getObject(eq("fkColumnName1"));
+		doReturn("fkColumnValue1").when(rs).getObject("fkColumnName1");
 
 		scriptData.handleForeignKeyConstraints(mapTables, fkTableDataFilter, Collections.singletonList(fk), rs);
 
