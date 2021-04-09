@@ -1,4 +1,4 @@
-[![Build Status](https://app.travis-ci.com/adessoSchweizAG/db-extractor.svg?branch=master)](https://app.travis-ci.com/github/adessoSchweizAG/db-extractor)
+[![CI Build](https://github.com/adessoSchweizAG/db-extractor/actions/workflows/build.yml/badge.svg)](https://github.com/adessoSchweizAG/db-extractor/actions/workflows/build.yml)
 [![sonarcloud.io: Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=ch.adesso%3Adb-extractor&metric=ncloc)](https://sonarcloud.io/dashboard?id=ch.adesso%3Adb-extractor)
 [![sonarcloud.io: Coverage](https://sonarcloud.io/api/project_badges/measure?project=ch.adesso%3Adb-extractor&metric=coverage)](https://sonarcloud.io/dashboard?id=ch.adesso%3Adb-extractor)
 [![sonarcloud.io: Bugs](https://sonarcloud.io/api/project_badges/measure?project=ch.adesso%3Adb-extractor&metric=bugs)](https://sonarcloud.io/dashboard?id=ch.adesso%3Adb-extractor)
