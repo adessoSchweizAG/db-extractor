@@ -3,6 +3,8 @@ on:
   push:
   pull_request:
       types: [opened, synchronize, reopened]
+  schedule:
+    - cron:  '17 4 * * MON'
 
 jobs:
   build:
@@ -71,3 +73,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+
+      - name: Publish Packages
+        if: ${{ github.repository == 'adessoSchweizAG/db-extractor' && github.ref == 'refs/heads/master' && github.event_name == 'push' }}
+        run: mvn --batch-mode deploy -pl db-extractor-core,db-extractor-spring -am
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
