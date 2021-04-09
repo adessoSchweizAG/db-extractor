@@ -1,6 +1,8 @@
 name: CI Build
 on:
   push:
+  pull_request:
+      types: [opened, synchronize, reopened]
 
 jobs:
   build:
@@ -32,6 +34,14 @@ jobs:
     steps:
       - name: Check out repository code
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
 
       - name: Cache local Maven repository
         uses: actions/cache@v2
@@ -56,11 +66,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-owasp-
 
-      - name: Set up JDK 11
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'adopt'
-
       - name: Maven Build
-        run: mvn --batch-mode clean verify
+        run: mvn --batch-mode clean verify sonar:sonar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
