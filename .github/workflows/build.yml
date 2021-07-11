@@ -5,6 +5,7 @@ on:
       types: [opened, synchronize, reopened]
   schedule:
     - cron:  '17 4 * * MON'
+  workflow_dispatch:
 
 jobs:
   build:
