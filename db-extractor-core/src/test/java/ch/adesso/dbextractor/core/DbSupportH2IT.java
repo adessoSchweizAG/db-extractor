@@ -1,10 +1,10 @@
 package ch.adesso.dbextractor.core;
 
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
@@ -140,7 +140,7 @@ public class DbSupportH2IT {
 	private void toSqlValueString(SetStatementParameter setParameterValue, String convertTo) throws SQLException, ParseException {
 		
 		try (Connection con = dbSupport.getConnection();
-				PreparedStatement prepStmt = con.prepareStatement("SELECT CONVERT(?, " + convertTo + ") AS VALUE");
+				PreparedStatement prepStmt = con.prepareStatement("SELECT CONVERT(?, " + convertTo + ") AS `VALUE`");
 				Statement stmt = con.createStatement()) {
 			
 			setParameterValue.setParameter(prepStmt);
@@ -148,7 +148,7 @@ public class DbSupportH2IT {
 				while (rsExpected.next()) {
 					Object value = rsExpected.getObject(1);
 
-					ResultSet rs = stmt.executeQuery("SELECT " + dbSupport.toSqlValueString(value) + " AS VALUE");
+					ResultSet rs = stmt.executeQuery("SELECT " + dbSupport.toSqlValueString(value) + " AS `VALUE`");
 					while (rs.next()) {
 						if (value instanceof byte[]) {
 							assertArrayEquals((byte[]) value, (byte[]) rs.getObject(1));
@@ -176,17 +176,17 @@ public class DbSupportH2IT {
 		assertThat(generateScript, containsString("INSERT INTO CUSTOMER (ID, FIRSTNAME, LASTNAME, STREET, CITY) VALUES (0, 'Laura', 'Steel', '429 Seventh Av.', 'Dallas');"));
 		
 		assertThat(generateScript, containsString("-- SELECT * FROM PRODUCT WHERE ID IN (7, 14, 47) ORDER BY ID;"));
-		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (7, 'Telephone Shoe', 84);"));
-		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (14, 'Telephone Iron', 124);"));
-		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (47, 'Ice Tea Iron', 178);"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (7, 'Telephone Shoe', 84.00);"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (14, 'Telephone Iron', 124.00);"));
+		assertThat(generateScript, containsString("INSERT INTO PRODUCT (ID, NAME, PRICE) VALUES (47, 'Ice Tea Iron', 178.00);"));
 		
 		assertThat(generateScript, containsString("-- SELECT * FROM INVOICE WHERE ID IN (0) ORDER BY ID;"));
-		assertThat(generateScript, containsString("INSERT INTO INVOICE (ID, CUSTOMERID, TOTAL) VALUES (0, 0, 5847.0);"));
+		assertThat(generateScript, containsString("INSERT INTO INVOICE (ID, CUSTOMERID, TOTAL) VALUES (0, 0, 5847.00);"));
 		
 		assertThat(generateScript, containsString("-- SELECT * FROM ITEM WHERE InvoiceID = 0 ORDER BY ID;"));
-		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (0, 0, 2, 47, 3, 267.0);"));
-		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (1, 0, 1, 14, 19, 186.0);"));
-		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (2, 0, 0, 7, 12, 126.0);"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (0, 0, 2, 47, 3, 267.00);"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (1, 0, 1, 14, 19, 186.00);"));
+		assertThat(generateScript, containsString("INSERT INTO ITEM (ID, INVOICEID, ITEM, PRODUCTID, QUANTITY, COST) VALUES (2, 0, 0, 7, 12, 126.00);"));
 	}
 
 	@Test
