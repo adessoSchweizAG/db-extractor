@@ -45,6 +45,10 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 		return dataSource.getConnection();
 	}
 
+	protected String getSqlSelectPrimaryKey(Connection con) throws SQLException {
+		return getSqlSelectPrimaryKey();
+	}
+
 	protected String getSqlSelectPrimaryKey() {
 		return SQL_SELECT_PRIMARY_KEY;
 	}
@@ -53,7 +57,7 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 	public final Map<DatabaseObject, String> loadPrimaryKey() {
 		try (Connection con = getConnection();
 				Statement stmt = con.createStatement();
-				ResultSet rs = stmt.executeQuery(getSqlSelectPrimaryKey())) {
+				ResultSet rs = stmt.executeQuery(getSqlSelectPrimaryKey(con))) {
 
 			Map<DatabaseObject, String> result = new HashMap<>();
 			while (rs.next()) {
@@ -69,6 +73,10 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 		}
 	}
 
+	protected String getSqlSelectForeignKey(Connection con) throws SQLException {
+		return getSqlSelectForeignKey();
+	}
+
 	protected String getSqlSelectForeignKey() {
 		return SQL_SELECT_FOREIGN_KEY;
 	}
@@ -77,7 +85,7 @@ public abstract class AbstractDbSupportSql92 extends AbstractDbSupport {
 	public final List<ForeignKey> loadForeignKey() {
 		try (Connection con = getConnection();
 				Statement stmt = con.createStatement();
-				ResultSet rs = stmt.executeQuery(getSqlSelectForeignKey())) {
+				ResultSet rs = stmt.executeQuery(getSqlSelectForeignKey(con))) {
 
 			Map<DatabaseObject, ForeignKey> mapForeignKey = new HashMap<>();
 			while (rs.next()) {
