@@ -6,6 +6,10 @@
     "@fortawesome/fontawesome-svg-core": "^1.2.28",
     "@fortawesome/free-solid-svg-icons": "^5.13.0",
     "@fortawesome/react-fontawesome": "^0.1.8",
+    "@types/jest": "^27.4.1",
+    "@types/node": "^17.0.21",
+    "@types/react": "^17.0.39",
+    "@types/react-dom": "^17.0.11",
     "bootstrap": "^4.4.1",
     "react": "^16.13.1",
     "react-bootstrap": "^1.0.0",
@@ -14,8 +18,7 @@
     "react-scripts": "^3.4.1",
     "redux": "^4.0.5",
     "redux-observable": "^1.2.0",
-    "rxjs": "^6.5.4",
-    "typescript": "^3.7.4"
+    "rxjs": "^6.5.4"
   },
   "scripts": {
     "start": "react-scripts start",
@@ -27,6 +30,7 @@
   "jest": {
     "collectCoverageFrom": [
       "src/**/*.{js,jsx}",
+      "src/**/*.{ts,tsx}",
       "!build/**",
       "!node/**",
       "!node_modules/**"
@@ -37,7 +41,10 @@
     ]
   },
   "eslintConfig": {
-    "extends": "react-app"
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
   "browserslist": {
     "production": [
@@ -57,6 +64,7 @@
     "@testing-library/react": "^9.5.0",
     "@testing-library/user-event": "^10.0.1",
     "jest-fetch-mock": "^3.0.3",
-    "jest-sonar": "^0.2.5"
+    "jest-sonar": "^0.2.5",
+    "typescript": "^3.9.10"
   }
 }
