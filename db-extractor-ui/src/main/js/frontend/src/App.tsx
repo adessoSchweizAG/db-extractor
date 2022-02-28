@@ -15,7 +15,7 @@ function App() {
 			<Navbar bg="dark" variant="dark">
 				<Navbar.Brand>DB Extractor - React UI</Navbar.Brand>
 			</Navbar>
-			<Container fluid="true">
+			<Container fluid={true}>
 				<Row>
 					<Col as="nav" className="sidebar bg-light" md="2">
 						<div className="sidebar-sticky">

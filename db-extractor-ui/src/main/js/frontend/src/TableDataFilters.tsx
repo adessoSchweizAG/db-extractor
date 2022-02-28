@@ -1,14 +1,23 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPlusSquare, faMinusSquare } from '@fortawesome/free-solid-svg-icons';
 import { Button, Form, Col } from 'react-bootstrap';
 
 import DbExtractorRestClient from './DbExtractorRestClient';
+import { RootState } from './store/store';
+import { TableDataFilter as TableDataFilterType } from './types/TableDataFilter';
 
-class TableDataFilters extends React.Component {
+type TableDataFiltersProps = PropsFromRedux;
 
-	constructor(props) {
+type TableDataFiltersState = {
+	tableDataFilters: TableDataFilterType[],
+	generatedScript: string
+};
+
+class TableDataFilters extends React.Component<TableDataFiltersProps, TableDataFiltersState> {
+
+	constructor(props: TableDataFiltersProps) {
 		super(props);
 		this.handleAddTableDataFilter = this.handleAddTableDataFilter.bind(this);
 		this.handleChangeTableDataFilter = this.handleChangeTableDataFilter.bind(this);
@@ -19,14 +28,14 @@ class TableDataFilters extends React.Component {
 		this.state = { tableDataFilters: [], generatedScript: "" };
 	}
 	
-	handleAddTableDataFilter(tableDataFilter) {
+	handleAddTableDataFilter(tableDataFilter: TableDataFilterType): void {
 		
 		this.setState((state, props) => {
 			return { tableDataFilters: state.tableDataFilters.concat(tableDataFilter)};
 		});
 	}
 	
-	handleChangeTableDataFilter(tableDataFilter, target) {
+	handleChangeTableDataFilter(tableDataFilter: TableDataFilterType, { target }: React.ChangeEvent<HTMLInputElement>): void {
 		
 		const name = target.name === "" ? target.id : target.name;
 		const value = target.type === 'checkbox' ? target.checked : target.value;
@@ -36,14 +45,14 @@ class TableDataFilters extends React.Component {
 		});
 	}
 	
-	handleRemoveTableDataFilter(tableDataFilter) {
+	handleRemoveTableDataFilter(tableDataFilter: TableDataFilterType): void {
 		
 		this.setState((state, props) => {
 			return { tableDataFilters: state.tableDataFilters.filter(item => { return item !== tableDataFilter }) };
 		});
 	}
 	
-	handleScriptData() {
+	handleScriptData(): void {
 		DbExtractorRestClient.scriptData(this.props.dataSourceConfig, this.state.tableDataFilters)
 		.then(data => {
 			return { generatedScript: data };
@@ -52,7 +61,7 @@ class TableDataFilters extends React.Component {
 		.catch(console.log);
 	}
 	
-	handleScriptDataDownload() {
+	handleScriptDataDownload(): void {
 		DbExtractorRestClient.scriptData(this.props.dataSourceConfig, this.state.tableDataFilters)
 		.then(data => {
 			let blob = new Blob([data], { type: "text/plain" });
@@ -79,7 +88,7 @@ class TableDataFilters extends React.Component {
 					{(this.state.tableDataFilters || []).map((item, index) => {
 						return <TableDataFilterView key={index}
 								{...item}
-								handleChange={(event) => this.handleChangeTableDataFilter(item, event.target) }
+								handleChange={(event) => this.handleChangeTableDataFilter(item, event) }
 								handleRemoveTableDataFilter={() => this.handleRemoveTableDataFilter(item) } />
 					})}
 					<TableDataFilter handleAddTableDataFilter={this.handleAddTableDataFilter} />
@@ -101,15 +110,21 @@ class TableDataFilters extends React.Component {
 	}
 }
 
-class TableDataFilter extends React.Component {
+type TableDataFilterProps = {
+	handleAddTableDataFilter?: (state: TableDataFilterState) => void,
+};
+
+type TableDataFilterState = TableDataFilterType;
+
+class TableDataFilter extends React.Component<TableDataFilterProps, TableDataFilterState> {
 	
-	constructor(props) {
+	constructor(props: TableDataFilterProps) {
 		super(props);
 		this.handleChange = this.handleChange.bind(this);
 		this.handleAddTableDataFilter = this.handleAddTableDataFilter.bind(this);
 	}
 	
-	handleChange({ target }) {
+	handleChange({ target }: React.ChangeEvent<HTMLInputElement>): void {
 		const name = target.name === "" ? target.id : target.name;
 		const value = target.type === 'checkbox' ? target.checked : target.value;
 		// console.log("handleChange: " + name + ": " + value);
@@ -117,8 +132,8 @@ class TableDataFilter extends React.Component {
 		this.setState({ [name]: value });
 	}
 	
-	handleAddTableDataFilter() {
-		this.props.handleAddTableDataFilter(this.state);
+	handleAddTableDataFilter(): void {
+		this.props.handleAddTableDataFilter?.(this.state);
 		this.setState({ catalog: undefined, schema: undefined, name: undefined });
 	}
 	
@@ -131,7 +146,12 @@ class TableDataFilter extends React.Component {
 }
 
 function TableDataFilterView({ catalog = "", schema = "", name = "",
-		handleChange, handleAddTableDataFilter, handleRemoveTableDataFilter }) {
+		handleChange, handleAddTableDataFilter, handleRemoveTableDataFilter }:
+		{
+			handleChange: ((event: React.ChangeEvent<HTMLInputElement>) => void),
+			handleAddTableDataFilter?: ((event: React.MouseEvent<HTMLButtonElement>) => void),
+			handleRemoveTableDataFilter?: ((event: React.MouseEvent<HTMLButtonElement>) => void)
+		} & TableDataFilterType) {
 	return (
 		<Form.Row>
 			<Col><Form.Control id="catalog" placeholder="catalog" value={catalog} onChange={handleChange} /></Col>
@@ -142,10 +162,14 @@ function TableDataFilterView({ catalog = "", schema = "", name = "",
 		</Form.Row>);
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: RootState) {
 	return {
 		dataSourceConfig: state.dataSourceConfig
 	};
 }
 
-export default connect(mapStateToProps)(TableDataFilters);
+const connector = connect(mapStateToProps);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+export default connector(TableDataFilters);

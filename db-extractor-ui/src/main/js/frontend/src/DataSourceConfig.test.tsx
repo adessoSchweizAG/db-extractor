@@ -14,7 +14,7 @@ window.baseUrl = 'http://localhost/';
 
 enableFetchMocks();
 
-function renderWithProvider(component) {
+function renderWithProvider(component: JSX.Element) {
 	return render(<Provider store={store}>{component}</Provider>);
 }
 
@@ -40,7 +40,7 @@ it('fetch driver classes', async () => {
 	
 	renderWithProvider(<DataSourceConfig />);
 	const driverClassName = screen.getByLabelText('Driver Class Name');
-	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { driverClassName });
+	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { container: driverClassName });
 	
 	userEvent.selectOptions(driverClassName, 'org.hsqldb.jdbc.JDBCDriver');
 	expect(screen.getByLabelText('Url')).toHaveAttribute('value', 'jdbc:hsqldb:mem:memdb');
@@ -62,8 +62,9 @@ it('fetch driver classes', async () => {
 	
 	expect(fetchMock.mock.calls.length).toEqual(1);
 	expect(fetchMock.mock.calls[0]).toEqual(['http://localhost/rest/driverClassNames', {
-			headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-			method: 'GET' } ]);
+		headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+		method: 'GET'
+	}]);
 });
 
 it('test connection', async () => {
@@ -72,7 +73,7 @@ it('test connection', async () => {
 	renderWithProvider(<DataSourceConfig />);
 	const driverClassName = screen.getByLabelText('Driver Class Name');
 	
-	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { driverClassName });
+	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { container: driverClassName });
 	
 	userEvent.selectOptions(driverClassName, 'org.hsqldb.jdbc.JDBCDriver');
 	expect(screen.getByLabelText('Url')).toHaveAttribute('value', 'jdbc:hsqldb:mem:memdb');
@@ -87,9 +88,10 @@ it('test connection', async () => {
 	
 	expect(fetchMock.mock.calls.length).toEqual(2);
 	expect(fetchMock.mock.calls[1]).toEqual(['http://localhost/rest/dataSourceConfig/dummy/test', {
-			headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-			method: 'POST',
-			body: '{"driverClassName":"org.hsqldb.jdbc.JDBCDriver","url":"jdbc:hsqldb:mem:memdb","username":"SA","password":"secret"}' } ]);
+		headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+		method: 'POST',
+		body: '{"driverClassName":"org.hsqldb.jdbc.JDBCDriver","url":"jdbc:hsqldb:mem:memdb","username":"SA","password":"secret"}'
+	}]);
 });
 
 it('test connection fail', async () => {
@@ -97,7 +99,7 @@ it('test connection fail', async () => {
 	
 	renderWithProvider(<DataSourceConfig />);
 	const driverClassName = screen.getByLabelText('Driver Class Name');
-	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { driverClassName });
+	await waitForElement(() => getByText(driverClassName, 'org.hsqldb.jdbc.JDBCDriver'), { container: driverClassName });
 	
 	userEvent.selectOptions(driverClassName, 'org.hsqldb.jdbc.JDBCDriver');
 	
@@ -108,7 +110,8 @@ it('test connection fail', async () => {
 	await expect(waitForElement(() => screen.getByText('No suitable driver found for'))).resolves.toHaveStyle('color: red');
 	expect(fetchMock.mock.calls.length).toEqual(2);
 	expect(fetchMock.mock.calls[1]).toEqual(['http://localhost/rest/dataSourceConfig/dummy/test', {
-			headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
-			method: 'POST',
-			body: '{"driverClassName":"org.hsqldb.jdbc.JDBCDriver","url":"jdbc:hsqldb:mem:memdb","username":""}' } ]);
+		headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+		method: 'POST',
+		body: '{"driverClassName":"org.hsqldb.jdbc.JDBCDriver","url":"jdbc:hsqldb:mem:memdb","username":""}'
+	}]);
 });

@@ -35,13 +35,13 @@ it('add, modify and remove', async () => {
 	
 	const addButton = container.querySelector('button > svg[data-icon="plus-square"]');
 	expect(addButton).toBeInTheDocument();
-	userEvent.click(addButton);
+	userEvent.click(addButton!);
 	const removeButton = await waitForElement(() => container.querySelector('button > svg[data-icon="minus-square"]'), { container });
 	
 	userEvent.type(screen.getByDisplayValue('PRODUCT'), 'CUSTOMER');
 	
 	expect(removeButton).toBeInTheDocument();
-	userEvent.click(removeButton);
+	userEvent.click(removeButton!);
 });
 
 it('generate SQL', async () => {

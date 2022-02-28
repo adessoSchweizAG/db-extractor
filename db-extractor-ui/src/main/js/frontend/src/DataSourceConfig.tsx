@@ -1,13 +1,26 @@
 import React from 'react';
-import { connect } from 'react-redux';
+import { connect, ConnectedProps } from 'react-redux';
 import { Button, Form } from 'react-bootstrap';
 import { fetchDriverClassNames, setDataSourceConfig } from './store/actions';
+import { DataSourceConfig as DataSourceConfigType } from './types/DataSourceConfig';
 
 import DbExtractorRestClient from './DbExtractorRestClient';
+import { RootState, AppDispatch } from './store/store';
 
-class DataSourceConfig extends React.Component {
+type DataSourceConfigProps = PropsFromRedux;
+
+type DataSourceConfigState = {
+	testResult?: {
+		style: {
+			color: string
+		},
+		message: string
+	}
+} & DataSourceConfigType;
+
+class DataSourceConfig extends React.Component<DataSourceConfigProps, DataSourceConfigState> {
 	
-	constructor(props) {
+	constructor(props: DataSourceConfigProps) {
 		super(props);
 		this.componentDidMount = this.componentDidMount.bind(this);
 		this.handleChange = this.handleChange.bind(this);
@@ -19,9 +32,9 @@ class DataSourceConfig extends React.Component {
 		this.props.fetchDriverClassNames();
 	}
 	
-	handleChange({ target }) {
+	handleChange({ target }: React.ChangeEvent<HTMLInputElement>): void {
 		const name = target.name === "" ? target.id : target.name;
-		const value = target.type === 'checkbox' ? target.checked : target.value;
+		const value = target.value;
 		// console.log("handleChange: " + name + ": " + value);
 		
 		if (name === "driverClassName") {
@@ -52,7 +65,7 @@ class DataSourceConfig extends React.Component {
 				url = "jdbc:<driver>:";
 			}
 			
-			this.setState((state, props) => {
+			this.setState((state) => {
 				if (typeof state.url === "string" && state.url.indexOf(urlPrefix) === 0) {
 					return { driverClassName: value };
 				}
@@ -63,39 +76,44 @@ class DataSourceConfig extends React.Component {
 		}
 	}
 	
-	handleTestConnection() {
+	handleTestConnection(): void {
 		
-		const dataSourceConfig = ({ id, name, driverClassName, url, username = "", password }) => {
+		const dataSourceConfig = ({ id, name, driverClassName, url, username = "", password }: DataSourceConfigState): DataSourceConfigType => {
 			return { id, name, driverClassName, url, username, password };
 		};
 		
-		this.setState({ testResult: { style: { color: 'black' }, message: "testing ..." }});
+		this.setState({ testResult: { style: { color: 'black' }, message: "testing ..." } });
 		DbExtractorRestClient.dataSourceConfigTest(dataSourceConfig(this.state))
-		.then(data => {
-			if (data.success === true) {
-				this.props.setDataSourceConfig(dataSourceConfig(this.state));
-				return { testResult: { style: { color: 'green' }, message: "success" }};
-			}
-			return { testResult: { style: { color: 'red' }, message: data.message }};
-		})
-		.then(state => this.setState(state))
-		.catch(console.log);
+			.then(data => {
+				if (data.success === true) {
+					this.props.setDataSourceConfig(dataSourceConfig(this.state));
+					return { testResult: { style: { color: 'green' }, message: "success" } };
+				}
+				return { testResult: { style: { color: 'red' }, message: data.message } };
+			})
+			.then(state => this.setState(state))
+			.catch(console.log);
 	}
 	
 	render() {
 		return (
 			<DataSourceConfigView {...this.state} {...this.props}
-					handleChange={this.handleChange}
-					handleTestConnection={this.handleTestConnection} />);
+				handleChange={this.handleChange}
+				handleTestConnection={this.handleTestConnection} />);
 	}
 }
 
 function DataSourceConfigView({ driverClassNames = [],
-		driverClassName = "", url = "jdbc:<driver>:", username = "", password = "",
-		testResult = { style: {}, message: "" },
-		handleChange, handleTestConnection }) {
+	driverClassName = "", url = "jdbc:<driver>:", username = "", password = "",
+	testResult = { style: {}, message: "" },
+	handleChange, handleTestConnection
+}: DataSourceConfigType & {
+	driverClassNames?: string[],
+	testResult?: { style: {}, message: string },
+	handleChange: ((event: React.ChangeEvent<HTMLInputElement>) => void), handleTestConnection: (() => void)
+}) {
 	
-	const optionDriverClassNames = driverClassNames.map(function (item) {
+	const optionDriverClassNames = driverClassNames.map(function(item) {
 		if (driverClassName === item)
 			return <option key={item} value={item} selected>{item}</option>;
 		else
@@ -133,17 +151,21 @@ function DataSourceConfigView({ driverClassNames = [],
 		</React.Fragment>);
 }
 
-function mapStateToProps(state) {
+function mapStateToProps(state: RootState) {
 	return {
 		driverClassNames: state.driverClassNames
 	};
 }
 
-function mapDispatchToProps(dispatch) {
+function mapDispatchToProps(dispatch: AppDispatch) {
 	return {
 		fetchDriverClassNames: () => dispatch(fetchDriverClassNames()),
-		setDataSourceConfig: dataSourceConfig => dispatch(setDataSourceConfig(dataSourceConfig))
+		setDataSourceConfig: (dataSourceConfig: DataSourceConfigType) => dispatch(setDataSourceConfig(dataSourceConfig))
 	};
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(DataSourceConfig);
+const connector = connect(mapStateToProps, mapDispatchToProps);
+
+type PropsFromRedux = ConnectedProps<typeof connector>;
+
+export default connector(DataSourceConfig);

@@ -1,11 +1,12 @@
-import { combineReducers } from 'redux';
+import { combineReducers, AnyAction } from 'redux';
+import { DataSourceConfig } from '../types/DataSourceConfig';
 
 import {
 	FETCH_DRIVER_CLASS_NAMES_SUCCESS,
 	SET_DATA_SOURCE_CONFIG
 } from './actions';
 
-function driverClassNames(state = [], action) {
+function driverClassNames(state: string[] = [], action: AnyAction): string[] {
 	switch (action.type) {
 		case FETCH_DRIVER_CLASS_NAMES_SUCCESS:
 			return action.payload;
@@ -14,7 +15,7 @@ function driverClassNames(state = [], action) {
 	}
 }
 
-function dataSourceConfig(state = {}, action) {
+function dataSourceConfig(state = {}, action: AnyAction): DataSourceConfig {
 	switch (action.type) {
 		case SET_DATA_SOURCE_CONFIG:
 			return action.payload;

@@ -1,4 +1,4 @@
-import { ofType, combineEpics } from 'redux-observable';
+import { ofType, combineEpics, Epic } from 'redux-observable';
 import { map, flatMap } from 'rxjs/operators';
 import DbExtractorRestClient from '../DbExtractorRestClient';
 
@@ -7,7 +7,7 @@ import {
 	fetchDriverClassNamesSuccess,
 } from './actions';
 
-const fetchDriverClassNamesEpic = action$ =>
+const fetchDriverClassNamesEpic: Epic = action$ =>
 	action$.pipe(
 		ofType(FETCH_DRIVER_CLASS_NAMES),
 		flatMap(() => DbExtractorRestClient.fetchDriverClassNames()),
