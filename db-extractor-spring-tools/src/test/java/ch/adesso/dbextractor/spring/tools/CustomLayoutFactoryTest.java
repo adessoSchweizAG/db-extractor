@@ -20,9 +20,9 @@ public class CustomLayoutFactoryTest {
 
 		assertEquals("org.springframework.boot.loader.PropertiesLauncher", layout.getLauncherClassName());
 		assertEquals("WEB-INF/classes/", layout.getClassesLocation());
-		assertEquals("WEB-INF/lib/", layout.getLibraryDestination(null, LibraryScope.COMPILE));
-		assertEquals("WEB-INF/lib-provided/", layout.getLibraryDestination(null, LibraryScope.PROVIDED));
-		assertEquals("WEB-INF/lib/", layout.getLibraryDestination(null, LibraryScope.RUNTIME));
+		assertEquals("WEB-INF/lib/", layout.getLibraryLocation(null, LibraryScope.COMPILE));
+		assertEquals("WEB-INF/lib-provided/", layout.getLibraryLocation(null, LibraryScope.PROVIDED));
+		assertEquals("WEB-INF/lib/", layout.getLibraryLocation(null, LibraryScope.RUNTIME));
 	}
 
 	@Test
@@ -32,7 +32,7 @@ public class CustomLayoutFactoryTest {
 
 		assertEquals("org.springframework.boot.loader.PropertiesLauncher", layout.getLauncherClassName());
 		assertEquals("", layout.getClassesLocation());
-		assertEquals("BOOT-INF/lib/", layout.getLibraryDestination(null, null));
+		assertEquals("BOOT-INF/lib/", layout.getLibraryLocation(null, null));
 	}
 
 }

@@ -24,7 +24,7 @@ import ch.adesso.dbextractor.core.DbSupportPostgres;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.HSQL)
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.HSQLDB)
 public class DataSourceConfigControllerIT {
 
 	@Autowired

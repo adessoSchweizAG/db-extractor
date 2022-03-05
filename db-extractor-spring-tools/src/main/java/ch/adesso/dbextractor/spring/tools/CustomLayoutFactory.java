@@ -39,8 +39,8 @@ public class CustomLayoutFactory implements LayoutFactory {
 		}
 
 		@Override
-		public String getLibraryDestination(String libraryName, LibraryScope scope) {
-			return layout.getLibraryDestination(libraryName, scope);
+		public String getLibraryLocation(String libraryName, LibraryScope scope) {
+			return layout.getLibraryLocation(libraryName, scope);
 		}
 
 		@Override
@@ -49,8 +49,19 @@ public class CustomLayoutFactory implements LayoutFactory {
 		}
 
 		@Override
+		public String getClasspathIndexFileLocation() {
+			return layout.getClasspathIndexFileLocation();
+		}
+
+		@Override
+		public String getLayersIndexFileLocation() {
+			return layout.getLayersIndexFileLocation();
+		}
+
+		@Override
 		public boolean isExecutable() {
 			return layout.isExecutable();
 		}
+
 	}
 }
