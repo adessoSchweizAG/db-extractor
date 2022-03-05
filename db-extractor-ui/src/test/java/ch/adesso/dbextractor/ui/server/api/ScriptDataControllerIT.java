@@ -20,7 +20,7 @@ import ch.adesso.dbextractor.core.DbSupportHsqlDb;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
-@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.HSQL)
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.HSQLDB)
 public class ScriptDataControllerIT {
 
 	@Autowired
