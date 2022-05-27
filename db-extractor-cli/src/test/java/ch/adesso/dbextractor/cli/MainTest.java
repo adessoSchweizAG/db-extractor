@@ -1,7 +1,7 @@
 package ch.adesso.dbextractor.cli;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsString;
-import static org.junit.Assert.assertThat;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -22,7 +22,7 @@ import ch.adesso.dbextractor.core.DbSupportHsqlDb;
 
 public class MainTest {
 
-	private static final String JDBC_ULR = "jdbc:hsqldb:mem:memdb";
+	private static final String JDBC_URL = "jdbc:hsqldb:mem:memdb";
 	private static final String JDBC_USERNAME = "SA";
 
 	private ByteArrayOutputStream out = new ByteArrayOutputStream();
@@ -46,7 +46,7 @@ public class MainTest {
 
 		Properties properties = new Properties();
 		properties.setProperty("driverClassName", DbSupportHsqlDb.DRIVER_CLASS_NAME);
-		properties.setProperty("url", JDBC_ULR);
+		properties.setProperty("url", JDBC_URL);
 		properties.setProperty("username", JDBC_USERNAME);
 
 		try (BasicDataSource dataSource = BasicDataSourceFactory.createDataSource(properties)) {
@@ -57,7 +57,7 @@ public class MainTest {
 
 			Main.main(new String[] {
 					"-driver", DbSupportHsqlDb.DRIVER_CLASS_NAME,
-					"-url", JDBC_ULR,
+					"-url", JDBC_URL,
 					"-username", JDBC_USERNAME,
 					"-FItem=InvoiceID = 0",
 					"-OItem=InvoiceID DESC" });
@@ -76,10 +76,12 @@ public class MainTest {
 	private static void runSqlScript(Connection con, InputStream stream) throws SQLException {
 
 		Pattern pattern = Pattern.compile("(?:;(?:\\r|\\n)+)|(?:--.*(?:\\r|\\n)+)");
-		try (Statement stmt = con.createStatement()) {
-			for (Scanner s = new Scanner(stream).useDelimiter(pattern); s.hasNext();) {
+		try (Statement stmt = con.createStatement();
+				Scanner scanner = new Scanner(stream).useDelimiter(pattern)) {
 
-				String sql = s.next().trim();
+			while (scanner.hasNext()) {
+
+				String sql = scanner.next().trim();
 				if (sql.length() > 0) {
 					stmt.executeUpdate(sql);
 				}
