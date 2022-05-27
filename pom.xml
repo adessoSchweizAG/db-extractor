@@ -131,6 +131,9 @@
 					</executions>
 					<configuration>
 						<failBuildOnCVSS>8</failBuildOnCVSS>
+						<suppressionFiles>
+							<suppressionFile>dependencycheck-supression.xml</suppressionFile>
+						</suppressionFiles>
 					</configuration>
 				</plugin>
 
