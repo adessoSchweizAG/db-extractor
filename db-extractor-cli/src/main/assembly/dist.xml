@@ -1,0 +1,13 @@
+<assembly>
+	<id>dist</id>
+	<formats>
+		<format>tar.gz</format>
+		<format>zip</format>
+	</formats>
+	<fileSets>
+		<fileSet>
+			<directory>${project.build.directory}/appassembler</directory>
+			<outputDirectory>${file.separator}</outputDirectory>
+		</fileSet>
+	</fileSets>
+</assembly>

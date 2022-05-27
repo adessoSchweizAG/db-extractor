@@ -1,9 +1,9 @@
 package ch.adesso.dbextractor.core;
 
-import java.util.List;
+import java.util.Collection;
 
 public interface ScriptData {
 
-	void script(List<TableDataFilter> filters, DataOutput output);
+	void script(Collection<TableDataFilter> filters, DataOutput output);
 
 }
