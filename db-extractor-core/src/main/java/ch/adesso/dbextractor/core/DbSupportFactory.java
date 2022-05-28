@@ -1,6 +1,7 @@
 package ch.adesso.dbextractor.core;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
@@ -66,18 +67,20 @@ public final class DbSupportFactory {
 				Enumeration<URL> resources = classLoader.getResources("db-extractor.properties");
 				while (resources.hasMoreElements()) {
 					URL url = resources.nextElement();
+					try (InputStream inStream = url.openStream()) {
 
-					Properties properties = new Properties();
-					properties.load(url.openStream());
+						Properties properties = new Properties();
+						properties.load(inStream);
 
-					for (Entry<Object, Object> entry : properties.entrySet()) {
-						Class<?> dbSupportClass = classLoader.loadClass((String) entry.getValue());
+						for (Entry<Object, Object> entry : properties.entrySet()) {
+							Class<?> dbSupportClass = classLoader.loadClass((String) entry.getValue());
 
-						Constructor<? extends DbSupport> constructor = (Constructor) dbSupportClass.getConstructor(DataSource.class);
-						if (!Modifier.isPublic(constructor.getModifiers())) {
-							LOGGER.warn("failed to initialize DbSupportRegistry");
-						} else {
-							registry.put((String) entry.getKey(), constructor);
+							Constructor<? extends DbSupport> constructor = (Constructor) dbSupportClass.getConstructor(DataSource.class);
+							if (!Modifier.isPublic(constructor.getModifiers())) {
+								LOGGER.warn("failed to initialize DbSupportRegistry");
+							} else {
+								registry.put((String) entry.getKey(), constructor);
+							}
 						}
 					}
 				}

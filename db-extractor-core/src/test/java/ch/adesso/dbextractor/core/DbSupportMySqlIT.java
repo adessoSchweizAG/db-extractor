@@ -1,15 +1,15 @@
 package ch.adesso.dbextractor.core;
 
+import static ch.adesso.dbextractor.core.TestHelper.runSqlScript;
 import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -25,8 +25,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Scanner;
-import java.util.regex.Pattern;
 
 import javax.sql.DataSource;
 
@@ -191,23 +189,6 @@ public class DbSupportMySqlIT {
 			runSqlScript(con, DbSupportMySqlIT.class.getResourceAsStream("DbSupportMySqlIT.drop.sql"));
 			runSqlScript(con, DbSupportMySqlIT.class.getResourceAsStream("DbSupportMySqlIT.create.sql"));
 			assertEquals(8, runSqlScript(con, new ByteArrayInputStream(out.toByteArray())));
-		}
-	}
-
-	private static int runSqlScript(Connection con, InputStream stream) throws SQLException {
-
-		Pattern pattern = Pattern.compile("(?:;(?:\\r|\\n)+)|(?:--.*(?:\\r|\\n)+)");
-		try (Statement stmt = con.createStatement()) {
-
-			int affectedRowCount = 0;
-			for (Scanner s = new Scanner(stream).useDelimiter(pattern); s.hasNext();) {
-
-				String sql = s.next().trim();
-				if (sql.length() > 0) {
-					affectedRowCount += stmt.executeUpdate(sql);
-				}
-			}
-			return affectedRowCount;
 		}
 	}
 }
